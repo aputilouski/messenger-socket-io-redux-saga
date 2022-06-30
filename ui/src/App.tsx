@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
+import { Login } from './pages';
+// import { Layout } from '@components';
 
 const App = () => (
+  // <Layout>
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Login />}>
@@ -14,6 +16,7 @@ const App = () => (
       </Route>
     </Routes>
   </BrowserRouter>
+  // </Layout>
 );
 
 export default App;
