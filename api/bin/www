@@ -1,37 +1,29 @@
 #!/usr/bin/env node
 
+let debug;
 const { normalize } = require('path');
 
 try {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
-  const path = `${__dirname}/../../${process.env.NODE_ENV === 'production' ? '.env' : '.env.local'}`;
-  console.log('NODE_ENV: ', process.env.NODE_ENV);
-  console.log('ENV FILE: ', normalize(path));
+  const path = normalize(`${__dirname}/../../${process.env.NODE_ENV === 'production' ? '.env' : '.env.local'}`);
   require('dotenv').config({ path });
+  debug = require('debug')('api:server');
+  debug('NODE_ENV:', process.env.NODE_ENV);
+  debug('ENV FILE:', path);
 } catch (ex) {
   throw new Error('.env file is not found.');
 }
 
-var app = require('../app');
-var debug = require('debug')('api:server');
-var http = require('http');
+const app = require('../app');
+const ioInit = require('../io');
+const http = require('http');
 
-/**
- * Get port from environment and store in Express.
- */
-
-var port = normalizePort(process.env.API_PORT || '3000');
+const port = normalizePort(process.env.API_PORT || '3000');
 app.set('port', port);
 
-/**
- * Create HTTP server.
- */
+const server = http.createServer(app);
 
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
+ioInit(server);
 
 server.listen(port);
 server.on('error', onError);
@@ -40,7 +32,6 @@ server.on('listening', onListening);
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
   var port = parseInt(val, 10);
 
@@ -60,7 +51,6 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
@@ -86,7 +76,6 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;

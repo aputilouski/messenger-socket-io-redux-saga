@@ -1,8 +1,8 @@
-import { Avatar, Paper, Badge, styled } from '@mui/material';
+import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
 
 const ChannelCard = () => (
-  <Paper className="py-2.5 px-3.5" elevation={4}>
-    <div className="flex gap-4">
+  <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }}>
+    <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
         <StyledBadge //
           overlap="circular"
@@ -18,11 +18,11 @@ const ChannelCard = () => (
         </div>
         <div className="flex justify-between text-xs ">
           <p className="grow text-gray-600">Last message text...</p>
-          <p className="font-bold text-white bg-indigo-500 rounded-full p-1 leading-none w-5 text-center">1</p>
+          <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">1</p>
         </div>
       </div>
     </div>
-  </Paper>
+  </ButtonBase>
 );
 
 export default ChannelCard;

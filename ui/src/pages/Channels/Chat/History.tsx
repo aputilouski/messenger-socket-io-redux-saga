@@ -11,7 +11,8 @@ const History = () => {
 
   return (
     <>
-      <div className="p-1.5 text-center text-lg border-b-2">Selected User</div>
+      <div className="p-1.5 text-center border-b-2">Selected User (last seen 15 min ago)</div>
+
       <div className="flex flex-col gap-2.5 overflow-hidden h-full p-2" ref={containerRef}>
         <Message //
           my
