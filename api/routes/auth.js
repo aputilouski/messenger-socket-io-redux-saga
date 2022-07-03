@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.post('/login', (req, res, next) => {
   res.json({
-    token: 'token-string',
+    token: Math.random().toString(36).substring(2),
     user: {
       login: 'aputilouski',
       name: 'Andrei Putilouski',

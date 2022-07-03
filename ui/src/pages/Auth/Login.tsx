@@ -1,37 +1,40 @@
 import React from 'react';
-import { TextField, Button, Paper } from '@mui/material';
+import { TextField, Paper, Button } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import { Link } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { login, RootState, LoginCredentials } from 'redux-manager';
+import { useSelector } from 'react-redux';
+// import { io } from 'socket.io-client';
+// const socket = io();
 
 const Login = () => {
-  const [state, setState] = React.useState({ username: '', password: '' });
+  const [credentials, setCredentials] = React.useState<LoginCredentials>({ username: '', password: '' });
+  const { loading } = useSelector((state: RootState) => state.auth);
 
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setState(state => ({ ...state, [name]: value }));
+    setCredentials(state => ({ ...state, [name]: value }));
   }, []);
 
-  const onSubmit = (event: React.FormEvent, state: { username: string; password: string }) => {
+  const onSubmit = React.useCallback((event: React.FormEvent, credentials: LoginCredentials) => {
     event.preventDefault();
-    // console.log(state);
-    // const socket = io('http://localhost:9002');
-    // console.log(socket);
-  };
+    login(credentials);
+  }, []);
 
   return (
     <div className="w-screen h-screen flex">
-      <form onSubmit={event => onSubmit(event, state)} className="max-w-sm w-full m-auto">
+      <form onSubmit={event => onSubmit(event, credentials)} className="max-w-sm w-full m-auto">
         <Paper className=" flex flex-col gap-3.5 p-4" elevation={5}>
           <h1 className="text-2xl mb-1.5">Login</h1>
           <TextField //
-            value={state.username}
+            value={credentials.username}
             onChange={onChange}
             name="username"
             label="Username"
             autoComplete="username"
           />
           <TextField //
-            value={state.password}
+            value={credentials.password}
             onChange={onChange}
             name="password"
             label="Password"
@@ -39,11 +42,19 @@ const Login = () => {
             autoComplete="current-password"
           />
 
-          <Button variant="contained" size="large" type="submit">
+          <LoadingButton //
+            loading={loading}
+            variant="contained"
+            size="large"
+            type="submit">
             Login
-          </Button>
+          </LoadingButton>
 
-          <Button variant="text" size="small" component={Link} to="/register">
+          <Button //
+            variant="text"
+            size="small"
+            component={Link}
+            to="/register">
             Register
           </Button>
         </Paper>

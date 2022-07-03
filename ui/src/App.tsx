@@ -3,7 +3,7 @@ import { Login, Register, Channels } from './pages';
 import { Layout } from 'components';
 import Theme from 'Theme';
 import { Provider } from 'react-redux';
-import store from 'redux/store';
+import { store } from 'redux-manager';
 
 const App = () => (
   <Theme>
