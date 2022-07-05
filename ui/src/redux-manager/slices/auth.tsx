@@ -23,7 +23,7 @@ export default createSlice({
       const { user, token } = action.payload;
       return { ...state, user, token, loading: false, authorized: true };
     },
-    setError: (state, action: StoreAction<string>) => ({ ...state, error: action.payload }),
-    setLoading: (state, action: StoreAction<boolean>) => ({ ...state, loading: action.payload }),
+    runLoading: state => ({ ...state, loading: true, error: undefined }),
+    catchError: (state, action: StoreAction<string>) => ({ ...state, error: action.payload, loading: false }),
   },
 });
