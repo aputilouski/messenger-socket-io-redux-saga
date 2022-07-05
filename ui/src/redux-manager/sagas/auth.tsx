@@ -1,5 +1,5 @@
 import { call, takeEvery, put } from 'redux-saga/effects';
-import { store, Action } from '../store';
+import { store, StoreAction } from '../store';
 import authSlice from '../slices/auth';
 import api from 'api';
 
@@ -9,10 +9,15 @@ export type LoginCredentials = { username: string; password: string };
 
 export const login = (payload: LoginCredentials) => store.dispatch({ type: LOGIN, payload });
 
-function* loginSaga(action: Action<LoginCredentials>) {
-  yield put(authSlice.actions.loading(true));
-  const result: Promise<any> = yield call(() => api.login(action.payload));
-  console.log(result);
+function* loginSaga(action: StoreAction<LoginCredentials>) {
+  yield put(authSlice.actions.setLoading(true));
+  try {
+    const response: Awaited<ReturnType<typeof api.login>> = yield call(() => api.login(action.payload));
+    yield put(authSlice.actions.login(response.data));
+  } catch (e) {
+    console.error(e);
+    yield put(authSlice.actions.setLoading(false));
+  }
 }
 
 export default function* authSaga() {

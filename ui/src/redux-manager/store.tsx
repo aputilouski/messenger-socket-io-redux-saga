@@ -16,4 +16,4 @@ sagaMiddleware.run(rootSaga);
 
 export type RootState = ReturnType<typeof store.getState>;
 
-export type Action<T> = { type: string; payload: T };
+export type StoreAction<T> = { type: string; payload: T };

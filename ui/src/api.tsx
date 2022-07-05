@@ -6,7 +6,7 @@ const endpoints = {
 };
 
 const api = {
-  login: (credentials: LoginCredentials) => axios.post(endpoints.login, credentials),
+  login: (credentials: LoginCredentials) => axios.post<{ token: string; user: User }>(endpoints.login, credentials),
 };
 
 export default api;
