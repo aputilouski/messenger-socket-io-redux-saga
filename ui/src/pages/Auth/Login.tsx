@@ -5,8 +5,6 @@ import { Link } from 'react-router-dom';
 import { login, RootState, LoginCredentials } from 'redux-manager';
 import { useSelector } from 'react-redux';
 import Joi from 'joi';
-// import { io } from 'socket.io-client';
-// const socket = io();
 
 const LoginCredentialsScheme = Joi.object<LoginCredentials>({
   username: Joi.string().alphanum().min(3).max(30).required().label('Username'),

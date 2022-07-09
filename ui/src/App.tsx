@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Login, Register, Channels } from './pages';
+import { Login, Register, Messenger } from './pages';
 import { Layout, AuthController } from 'components';
 import Theme from 'Theme';
 import { Provider } from 'react-redux';
@@ -14,7 +14,7 @@ const App = () => (
             <Route path="/" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="channels" element={<Layout />}>
-              <Route index element={<Channels />} />
+              <Route index element={<Messenger />} />
             </Route>
           </Routes>
         </AuthController>

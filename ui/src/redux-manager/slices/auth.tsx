@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { StoreAction } from '../store';
+import { StoreAction } from '../actions';
 
 type AuthSlice = {
   token: string | null;
@@ -23,6 +23,7 @@ export default createSlice({
       const { user, token } = action.payload;
       return { ...state, user, token, loading: false, authorized: true };
     },
+    logout: state => ({ ...state, user: null, token: null, authorized: false, loading: false, error: undefined }),
     runLoading: state => ({ ...state, loading: true, error: undefined }),
     catchError: (state, action: StoreAction<string>) => ({ ...state, error: action.payload, loading: false }),
   },

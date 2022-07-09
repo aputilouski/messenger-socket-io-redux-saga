@@ -1,11 +1,11 @@
-import List from './List';
+import Rooms from './Rooms';
 import Chat from './Chat';
 
-const Channels = () => {
+const Messenger = () => {
   return (
     <div className="grid grid-cols-6 h-full divide-x-2">
       <div className="col-span-2">
-        <List />
+        <Rooms />
       </div>
       <div className="col-span-4">
         <Chat />
@@ -14,4 +14,4 @@ const Channels = () => {
   );
 };
 
-export default Channels;
+export default Messenger;

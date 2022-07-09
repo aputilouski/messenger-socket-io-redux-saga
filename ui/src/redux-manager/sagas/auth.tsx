@@ -1,13 +1,7 @@
 import { call, takeEvery, put } from 'redux-saga/effects';
-import { store, StoreAction } from '../store';
 import authSlice from '../slices/auth';
 import api, { getErrorMessage } from 'api';
-
-const LOGIN = 'AUTH/LOGIN';
-
-export type LoginCredentials = { username: string; password: string };
-
-export const login = (payload: LoginCredentials) => store.dispatch({ type: LOGIN, payload });
+import { LOGIN, LOGOUT, LoginCredentials, StoreAction } from '../actions';
 
 function* loginSaga(action: StoreAction<LoginCredentials>) {
   yield put(authSlice.actions.runLoading());
@@ -20,6 +14,11 @@ function* loginSaga(action: StoreAction<LoginCredentials>) {
   }
 }
 
+function* logoutSaga() {
+  yield put(authSlice.actions.logout());
+}
+
 export default function* authSaga() {
   yield takeEvery(LOGIN, loginSaga);
+  yield takeEvery(LOGOUT, logoutSaga);
 }

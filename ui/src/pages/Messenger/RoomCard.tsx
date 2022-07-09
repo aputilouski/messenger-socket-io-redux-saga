@@ -1,6 +1,6 @@
 import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
 
-const ChannelCard = () => (
+const RoomCard = () => (
   <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
@@ -25,7 +25,7 @@ const ChannelCard = () => (
   </ButtonBase>
 );
 
-export default ChannelCard;
+export default RoomCard;
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {

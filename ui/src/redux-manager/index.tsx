@@ -1,2 +1,2 @@
 export * from './store';
-export * from './sagas/auth';
+export * from './actions';

@@ -1,7 +1,7 @@
 import { TextField } from '@mui/material';
-import ChannelCard from './ChannelCard';
+import RoomCard from './RoomCard';
 
-const List = () => {
+const Rooms = () => {
   return (
     <>
       <div className="p-2">
@@ -19,14 +19,14 @@ const List = () => {
         />
       </div>
       <div className="p-2 flex flex-col gap-2.5">
-        <ChannelCard />
-        <ChannelCard />
-        <ChannelCard />
-        <ChannelCard />
-        <ChannelCard />
+        <RoomCard />
+        <RoomCard />
+        <RoomCard />
+        <RoomCard />
+        <RoomCard />
       </div>
     </>
   );
 };
 
-export default List;
+export default Rooms;
