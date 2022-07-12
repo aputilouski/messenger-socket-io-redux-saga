@@ -1,7 +1,8 @@
-import { call, take, put, fork, all, cancel } from 'redux-saga/effects';
+import { call, take, put, fork, all, cancel, cancelled } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { LOGIN, LOGOUT, StoreAction } from '../actions';
+import { StoreAction } from '../actions';
+import authSlice from '../slices/auth';
 
 function subscribe(socket: Socket) {
   return eventChannel(emit => {
@@ -17,15 +18,20 @@ function subscribe(socket: Socket) {
     //   socket.on('disconnect', e => {
     //     // TODO: handle
     //   });
-    return () => {};
+    return () => socket.disconnect();
   });
 }
 
 function* read(socket: Socket) {
   const channel: EventChannel<Socket> = yield call(subscribe, socket);
-  while (true) {
-    const action: StoreAction = yield take(channel);
-    yield put(action);
+  try {
+    while (true) {
+      const action: StoreAction = yield take(channel);
+      yield put(action);
+    }
+  } finally {
+    const result: boolean = yield cancelled();
+    if (result) channel.close();
   }
 }
 
@@ -36,23 +42,22 @@ function* write(socket: Socket) {
   // }
 }
 
-function connect() {
+function connect(token: string) {
   const socket = io();
+  socket.auth = { token };
   return new Promise(resolve => socket.on('connect', () => resolve(socket)));
 }
 
 function* flow() {
   while (true) {
-    // const { payload }: StoreAction<LoginCredentials> = yield take(LOGIN);
-    yield take(LOGIN);
-    const socket: Socket = yield call(connect);
+    const { payload }: { payload: { token: string; user: User } } = yield take(authSlice.actions.login.toString());
+    const socket: Socket = yield call(connect, payload.token);
     const task: Task = yield all([fork(read, socket), fork(write, socket)]);
-    yield take(LOGOUT);
+    yield take(authSlice.actions.logout.toString());
     yield cancel(task);
   }
 }
 
 export default function* messengerSaga() {
   yield fork(flow);
-  // yield takeEvery(LOGIN, loginSaga);
 }

@@ -1,8 +1,8 @@
 import { spawn } from 'redux-saga/effects';
-import authSaga from './auth';
+import authWatcher from './auth';
 import messengerSaga from './messenger';
 
 export default function* rootSaga() {
-  yield spawn(authSaga);
+  yield spawn(authWatcher);
   yield spawn(messengerSaga);
 }

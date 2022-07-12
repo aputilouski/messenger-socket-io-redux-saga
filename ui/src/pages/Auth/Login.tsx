@@ -2,14 +2,9 @@ import React from 'react';
 import { TextField, Paper, Button, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Link } from 'react-router-dom';
-import { login, RootState, LoginCredentials } from 'redux-manager';
+import { login, RootState, LoginCredentials, resetAuth } from 'redux-manager';
 import { useSelector } from 'react-redux';
-import Joi from 'joi';
-
-const LoginCredentialsScheme = Joi.object<LoginCredentials>({
-  username: Joi.string().alphanum().min(3).max(30).required().label('Username'),
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).label('Password'),
-});
+import { ValidateLoginCredentials } from 'utils/validation-scheme';
 
 const Login = () => {
   const [state, setState] = React.useState<{ credentials: LoginCredentials; errors: Partial<LoginCredentials> }>({
@@ -31,22 +26,19 @@ const Login = () => {
 
   const onSubmit = React.useCallback((event: React.FormEvent, credentials: LoginCredentials) => {
     event.preventDefault();
-    const { error } = LoginCredentialsScheme.validate(credentials, { abortEarly: false });
-    if (error?.details.length) {
-      const errors: Partial<LoginCredentials> = {};
-      (Object.keys(credentials) as (keyof LoginCredentials)[]).forEach(key => {
-        const details = error.details.find(e => e.path.includes(key));
-        if (details) errors[key] = details.message;
-      });
-      setState(state => ({ ...state, errors }));
-    } else login(credentials);
+    const { errors } = ValidateLoginCredentials(credentials);
+    if (errors) setState(state => ({ ...state, errors }));
+    else login(credentials);
   }, []);
+
+  React.useEffect(() => resetAuth, []);
 
   return (
     <div className="w-screen h-screen flex">
       <form onSubmit={event => onSubmit(event, state.credentials)} className="max-w-sm w-full m-auto">
-        <Paper className=" flex flex-col gap-3.5 p-4" elevation={5}>
+        <Paper className="flex flex-col gap-3.5 p-4" elevation={5}>
           <h1 className="text-2xl mb-1.5">Login</h1>
+
           <TextField //
             value={state.credentials.username}
             onChange={onChange}
@@ -56,6 +48,7 @@ const Login = () => {
             error={Boolean(state.errors.username)}
             helperText={state.errors.username}
           />
+
           <TextField //
             value={state.credentials.password}
             onChange={onChange}
@@ -78,10 +71,12 @@ const Login = () => {
           </LoadingButton>
 
           <Button //
+            component={Link}
+            to="/register"
+            disabled={loading}
             variant="text"
             size="small"
-            component={Link}
-            to="/register">
+            replace>
             Register
           </Button>
         </Paper>

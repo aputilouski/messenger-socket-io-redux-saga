@@ -1,9 +1,10 @@
-import { call, takeEvery, put } from 'redux-saga/effects';
-import authSlice from '../slices/auth';
+import { call, takeEvery, put, select } from 'redux-saga/effects';
+import authSlice, { AuthSlice } from '../slices/auth';
 import api, { getErrorMessage } from 'api';
-import { LOGIN, LOGOUT, LoginCredentials, StoreAction } from '../actions';
+import { LOGIN, LOGOUT, LoginCredentials, StoreAction, AUTH_RESET } from '../actions';
+import { RootState } from '../store';
 
-function* loginSaga(action: StoreAction<LoginCredentials>) {
+function* loginWorker(action: StoreAction<LoginCredentials>) {
   yield put(authSlice.actions.runLoading());
   try {
     const response: Awaited<ReturnType<typeof api.login>> = yield call(() => api.login(action.payload));
@@ -14,11 +15,17 @@ function* loginSaga(action: StoreAction<LoginCredentials>) {
   }
 }
 
-function* logoutSaga() {
+function* logoutWorker() {
   yield put(authSlice.actions.logout());
 }
 
-export default function* authSaga() {
-  yield takeEvery(LOGIN, loginSaga);
-  yield takeEvery(LOGOUT, logoutSaga);
+function* resetWorker() {
+  const auth: AuthSlice = yield select((state: RootState) => state.auth);
+  if (auth.error || auth.loading) yield put(authSlice.actions.reset());
+}
+
+export default function* authWatcher() {
+  yield takeEvery(LOGIN, loginWorker);
+  yield takeEvery(LOGOUT, logoutWorker);
+  yield takeEvery(AUTH_RESET, resetWorker);
 }
