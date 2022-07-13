@@ -1,7 +1,7 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import authSlice, { AuthSlice } from '../slices/auth';
 import api, { getErrorMessage } from 'api';
-import { LOGIN, LOGOUT, REGISTRATION, LoginCredentials, RegistrationCredentials, StoreAction } from '../actions';
+import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, LoginCredentials, RegistrationCredentials, StoreAction } from '../actions';
 import { RootState } from '../store';
 import { replace, LOCATION_CHANGE } from 'connected-react-router';
 
@@ -40,9 +40,19 @@ function* registerWorker(action: StoreAction<RegistrationCredentials>) {
   }
 }
 
+function* checkUsernameWorker(action: StoreAction<string>) {
+  try {
+    const response: Awaited<ReturnType<typeof api.checkUsername>> = yield call(() => api.checkUsername(action.payload));
+    yield put(authSlice.actions.setUserAvailable(response.data.available));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export default function* authWatcher() {
   yield takeEvery(LOGIN, loginWorker);
   yield takeEvery(LOGOUT, logoutWorker);
   yield takeEvery(REGISTRATION, registerWorker);
+  yield takeEvery(CHECK_USERNAME, checkUsernameWorker);
   yield takeLatest(LOCATION_CHANGE, resetWorker);
 }

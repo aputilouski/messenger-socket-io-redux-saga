@@ -4,11 +4,13 @@ import axios, { AxiosError } from 'axios';
 const endpoints = {
   login: '/auth/login',
   register: '/auth/register',
+  checkUsername: '/auth/check-username',
 };
 
 const api = {
   login: (credentials: LoginCredentials) => axios.post<{ token: string; user: User }>(endpoints.login, credentials),
   register: (credentials: RegistrationCredentials) => axios.post(endpoints.register, credentials),
+  checkUsername: (username: string) => axios.post<{ available: boolean }>(endpoints.checkUsername, { username }),
 };
 
 export type ApiError = AxiosError<{ message?: string }>;

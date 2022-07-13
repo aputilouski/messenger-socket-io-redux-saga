@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { LoginCredentials, RegistrationCredentials } from 'redux-manager';
 
 type ValidateObject = { [key: string]: string };
-const ValidateScheme = <T,>(fields: ValidateObject, scheme: Joi.ObjectSchema): { errors: Partial<T> | undefined } => {
+const ValidateScheme = <T>(fields: ValidateObject, scheme: Joi.ObjectSchema): { errors: Partial<T> | undefined } => {
   const { error } = scheme.validate(fields, { abortEarly: false });
   if (error?.details?.length) {
     const errors: Partial<ValidateObject> = {};
@@ -16,7 +16,7 @@ const ValidateScheme = <T,>(fields: ValidateObject, scheme: Joi.ObjectSchema): {
 
 const LoginCredentialsSchemeKeys = {
   username: Joi.string().alphanum().min(3).max(30).required().label('Username'),
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).label('Password'),
+  password: Joi.string().min(3).max(30).required().label('Password'),
 };
 const LoginCredentialsScheme = Joi.object<LoginCredentials>(LoginCredentialsSchemeKeys);
 export const ValidateLoginCredentials = (credentials: LoginCredentials) => ValidateScheme<LoginCredentials>(credentials, LoginCredentialsScheme);

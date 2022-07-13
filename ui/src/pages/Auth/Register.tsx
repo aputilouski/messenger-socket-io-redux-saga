@@ -2,7 +2,7 @@ import React from 'react';
 import { TextField, Button, Paper, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Link } from 'react-router-dom';
-import { register, RegistrationCredentials, useStore } from 'redux-manager';
+import { RegistrationCredentials, useStore, register, checkUsername } from 'redux-manager';
 import { ValidateRegistrationCredentials } from 'utils/validation-scheme';
 
 const Register = () => {
@@ -11,10 +11,16 @@ const Register = () => {
     errors: {},
   });
 
-  const { loading, error } = useStore(state => state.auth);
+  const { loading, error, userAvailable } = useStore(state => state.auth);
+  const userNotAvailable = userAvailable === false;
 
+  const timerRef = React.useRef<NodeJS.Timeout>();
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof RegistrationCredentials }>) => {
     const { name, value } = event.target;
+    if (name === 'username' && value.trim()) {
+      timerRef.current && clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => checkUsername(value), 800);
+    }
     setState(state => {
       const credentials = { ...state.credentials, [name]: value };
       const errors = state.errors;
@@ -23,8 +29,9 @@ const Register = () => {
     });
   }, []);
 
-  const onSubmit = React.useCallback((event: React.FormEvent, credentials: RegistrationCredentials) => {
+  const onSubmit = React.useCallback((event: React.FormEvent, credentials: RegistrationCredentials, userNotAvailable: boolean) => {
     event.preventDefault();
+    if (userNotAvailable) return;
     const { errors } = ValidateRegistrationCredentials(credentials);
     if (errors) setState(state => ({ ...state, errors }));
     else register(credentials);
@@ -32,9 +39,19 @@ const Register = () => {
 
   return (
     <div className="w-screen h-screen flex">
-      <form onSubmit={event => onSubmit(event, state.credentials)} className="max-w-sm w-full m-auto">
+      <form onSubmit={event => onSubmit(event, state.credentials, userNotAvailable)} className="max-w-sm w-full m-auto">
         <Paper className="flex flex-col gap-3.5 p-4" elevation={5}>
           <h1 className="text-2xl mb-1.5">Registration</h1>
+
+          <TextField //
+            value={state.credentials.username}
+            onChange={onChange}
+            name="username"
+            label="Username"
+            error={userNotAvailable || Boolean(state.errors.username)}
+            helperText={userNotAvailable ? 'Username is already in use' : state.errors.username}
+            color={userAvailable ? 'success' : undefined}
+          />
 
           <TextField //
             value={state.credentials.name}
@@ -43,15 +60,6 @@ const Register = () => {
             label="Full Name"
             error={Boolean(state.errors.name)}
             helperText={state.errors.name}
-          />
-
-          <TextField //
-            value={state.credentials.username}
-            onChange={onChange}
-            name="username"
-            label="Username"
-            error={Boolean(state.errors.username)}
-            helperText={state.errors.username}
           />
 
           <TextField //

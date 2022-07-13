@@ -7,6 +7,7 @@ export type AuthSlice = {
   authorized: boolean;
   loading: boolean;
   error: string | undefined;
+  userAvailable: boolean | undefined;
 };
 
 export default createSlice({
@@ -17,6 +18,7 @@ export default createSlice({
     authorized: false,
     loading: false,
     error: undefined,
+    userAvailable: undefined,
   } as AuthSlice,
   reducers: {
     login: (state, action: StoreAction<{ token: string; user: User }>) => {
@@ -26,6 +28,7 @@ export default createSlice({
     logout: state => ({ ...state, token: null, user: null, authorized: false, loading: false, error: undefined }),
     runLoading: state => ({ ...state, loading: true, error: undefined }),
     catchError: (state, action: StoreAction<string>) => ({ ...state, loading: false, error: action.payload }),
-    reset: state => ({ ...state, loading: false, error: undefined }),
+    reset: state => ({ ...state, loading: false, error: undefined, userAvailable: undefined }),
+    setUserAvailable: (state, action: StoreAction<boolean>) => ({ ...state, userAvailable: action.payload }),
   },
 });
