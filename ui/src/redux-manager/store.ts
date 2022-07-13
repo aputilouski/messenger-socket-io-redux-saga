@@ -1,19 +1,19 @@
 import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
-import { createBrowserHistory } from 'history';
+import { createBrowserHistory, Location } from 'history';
 import { connectRouter } from 'connected-react-router';
 import rootSaga from './sagas';
 import authSlice from './slices/auth';
 import { useSelector, TypedUseSelectorHook } from 'react-redux';
 
-export const history = createBrowserHistory();
+export const history = createBrowserHistory<Location>();
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
-    router: connectRouter<unknown>(history),
+    router: connectRouter<Location>(history),
   },
   middleware: getDefaultMiddleware => getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });
