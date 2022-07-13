@@ -32,8 +32,7 @@ function* resetWorker() {
 function* registerWorker(action: StoreAction<RegistrationCredentials>) {
   yield put(authSlice.actions.runLoading());
   try {
-    const response: Awaited<ReturnType<typeof api.register>> = yield call(() => api.register(action.payload));
-    console.log(response);
+    yield call(() => api.register(action.payload));
     yield put(replace('/'));
   } catch (e) {
     console.error(e);
