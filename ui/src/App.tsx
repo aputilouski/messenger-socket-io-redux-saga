@@ -1,24 +1,29 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Route, Switch } from 'react-router';
+import { ConnectedRouter } from 'connected-react-router';
 import { Login, Register, Messenger } from './pages';
 import { Layout, AuthController } from 'components';
 import Theme from 'Theme';
 import { Provider } from 'react-redux';
-import { store } from 'redux-manager';
+import { store, history } from 'redux-manager';
 
 const App = () => (
   <Theme>
     <Provider store={store}>
-      <BrowserRouter>
-        <AuthController>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="channels" element={<Layout />}>
-              <Route index element={<Messenger />} />
-            </Route>
-          </Routes>
-        </AuthController>
-      </BrowserRouter>
+      <ConnectedRouter history={history}>
+        <Switch>
+          <Route exact path="/" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route>
+            <AuthController>
+              <Layout>
+                <Switch>
+                  <Route path="/channels" component={Messenger} />
+                </Switch>
+              </Layout>
+            </AuthController>
+          </Route>
+        </Switch>
+      </ConnectedRouter>
     </Provider>
   </Theme>
 );

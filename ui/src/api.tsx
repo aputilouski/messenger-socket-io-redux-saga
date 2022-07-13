@@ -1,12 +1,14 @@
-import { LoginCredentials } from 'redux-manager';
+import { LoginCredentials, RegistrationCredentials } from 'redux-manager';
 import axios, { AxiosError } from 'axios';
 
 const endpoints = {
   login: '/auth/login',
+  register: '/auth/register',
 };
 
 const api = {
   login: (credentials: LoginCredentials) => axios.post<{ token: string; user: User }>(endpoints.login, credentials),
+  register: (credentials: RegistrationCredentials) => axios.post(endpoints.register, credentials),
 };
 
 export type ApiError = AxiosError<{ message?: string }>;

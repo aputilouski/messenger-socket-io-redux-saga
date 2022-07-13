@@ -1,10 +1,9 @@
 import { Avatar, Button, IconButton } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { logout, RootState } from 'redux-manager';
-import { useSelector } from 'react-redux';
+import { logout, useStore } from 'redux-manager';
 
 const Header = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useStore(state => state.auth);
   return (
     <div className="py-2 px-5 grid grid-cols-6 items-center">
       <div className="col-span-2 flex items-center">

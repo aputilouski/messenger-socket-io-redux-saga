@@ -1,17 +1,9 @@
-import React from 'react';
-import { RootState } from 'redux-manager';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useStore } from 'redux-manager';
+import { Redirect } from 'react-router-dom';
 
 const AuthController = ({ children }: { children: JSX.Element }) => {
-  const navigate = useNavigate();
-  const navigateRef = React.useRef(navigate); // this ref is used to rid useEffect of the dependency on navigate that causes it to fire
-  navigateRef.current = navigate;
-
-  const { authorized } = useSelector((state: RootState) => state.auth);
-  React.useEffect(() => navigateRef.current(authorized ? '/channels' : '/', { replace: true }), [authorized]);
-
-  return children;
+  const { authorized } = useStore(state => state.auth);
+  return authorized ? children : <Redirect to="/" />;
 };
 
 export default AuthController;

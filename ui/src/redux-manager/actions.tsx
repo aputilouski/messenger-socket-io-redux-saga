@@ -11,8 +11,3 @@ export const logout = () => store.dispatch({ type: LOGOUT });
 export const REGISTRATION = 'AUTH/REGISTRATION';
 export type RegistrationCredentials = LoginCredentials & { name: string; confirmPassword: string };
 export const register = (payload: RegistrationCredentials) => store.dispatch({ type: REGISTRATION, payload });
-
-export const AUTH_RESET = 'AUTH/RESET';
-export const resetAuth = () => {
-  store.dispatch({ type: AUTH_RESET });
-};

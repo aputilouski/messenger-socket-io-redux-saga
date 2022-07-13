@@ -2,8 +2,7 @@ import React from 'react';
 import { TextField, Button, Paper, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Link } from 'react-router-dom';
-import { register, RegistrationCredentials, RootState, resetAuth } from 'redux-manager';
-import { useSelector } from 'react-redux';
+import { register, RegistrationCredentials, useStore } from 'redux-manager';
 import { ValidateRegistrationCredentials } from 'utils/validation-scheme';
 
 const Register = () => {
@@ -12,7 +11,7 @@ const Register = () => {
     errors: {},
   });
 
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading, error } = useStore(state => state.auth);
 
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof RegistrationCredentials }>) => {
     const { name, value } = event.target;
@@ -30,8 +29,6 @@ const Register = () => {
     if (errors) setState(state => ({ ...state, errors }));
     else register(credentials);
   }, []);
-
-  React.useEffect(() => resetAuth, []);
 
   return (
     <div className="w-screen h-screen flex">
