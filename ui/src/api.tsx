@@ -1,5 +1,26 @@
 import { LoginCredentials, RegistrationCredentials } from 'redux-manager';
 import axios, { AxiosError } from 'axios';
+import { notify } from 'utils';
+import { logout } from 'redux-manager';
+
+const DEFAULT_ERROR_MESSAGE = 'An unexpected problem has occurred, please try again later.';
+axios.interceptors.response.use(
+  response => {
+    if (response.data.message) notify.success(response.data.message);
+    return response;
+  },
+  error => {
+    let message = DEFAULT_ERROR_MESSAGE;
+    if (error.response?.data) {
+      const dataType = typeof error.response.data;
+      if (dataType === 'string') message = error.response.data;
+      else if (dataType === 'object') message = error.response.data.message;
+    }
+    notify.error(message);
+    if (error.response?.status === 401) logout();
+    throw error;
+  }
+);
 
 const endpoints = {
   login: '/auth/login',

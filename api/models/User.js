@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
-
-// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 const User = db => {
   const Model = db.define(
@@ -26,21 +25,22 @@ const User = db => {
     { underscored: true }
   );
 
-  // Model.prototype.getPublicFields = function () {
-  //   const user = this.get();
-  //   const HiddenFields = ['pass', 'createdAt', 'updatedAt'];
-  //   HiddenFields.forEach(field => {
-  //     delete user[field];
-  //   });
-  //   return user;
-  // };
+  Model.publicAttributes = ['username', 'name'];
 
-  // Model.publicAttributes = ['user_id', 'first_name', 'last_name', 'email', 'profile_pic', 'role'];
+  Model.prototype.getPublicFields = function () {
+    const user = this.get();
+    Object.keys(user).forEach(attribute => {
+      if (!Model.publicAttributes.includes(attribute)) delete user[attribute];
+    });
+    return user;
+  };
 
-  // Model.encryptPassword = function (passwordString) {
-  //   const salt = bcrypt.genSaltSync(8);
-  //   return bcrypt.hash(passwordString, salt);
-  // };
+  Model.encryptPassword = async str => {
+    const salt = await bcrypt.genSalt(10);
+    return bcrypt.hash(str, salt);
+  };
+
+  Model.comparePassword = bcrypt.compare;
 
   return Model;
 };

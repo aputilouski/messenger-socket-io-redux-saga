@@ -5,26 +5,29 @@ import { Layout, AuthController } from 'components';
 import Theme from 'Theme';
 import { Provider } from 'react-redux';
 import { store, history } from 'redux-manager';
+import { NotificationProvider } from 'utils';
 
 const App = () => (
   <Theme>
-    <Provider store={store}>
-      <ConnectedRouter history={history}>
-        <Switch>
-          <Route exact path="/" component={Login} />
-          <Route path="/register" component={Register} />
-          <Route>
-            <AuthController>
-              <Layout>
-                <Switch>
-                  <Route path="/channels" component={Messenger} />
-                </Switch>
-              </Layout>
-            </AuthController>
-          </Route>
-        </Switch>
-      </ConnectedRouter>
-    </Provider>
+    <NotificationProvider>
+      <Provider store={store}>
+        <ConnectedRouter history={history}>
+          <Switch>
+            <Route exact path="/" component={Login} />
+            <Route path="/register" component={Register} />
+            <Route>
+              <AuthController>
+                <Layout>
+                  <Switch>
+                    <Route path="/channels" component={Messenger} />
+                  </Switch>
+                </Layout>
+              </AuthController>
+            </Route>
+          </Switch>
+        </ConnectedRouter>
+      </Provider>
+    </NotificationProvider>
   </Theme>
 );
 

@@ -8,7 +8,7 @@ const LoginCredentialsScheme = Joi.object({
   password: Joi.string().min(3).max(30).required().label('Password'),
 });
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', async (req, res) => {
   try {
     const { name, username, password } = req.body;
 
@@ -16,7 +16,9 @@ router.post('/register', async (req, res, next) => {
     const { error } = LoginCredentialsScheme.validate({ username, password });
     if (error?.details) return res.status(400).json({ message: error.details[0].message });
 
-    await User.create({ name, username, password });
+    const encryptedPassword = await User.encryptPassword(password);
+    await User.create({ name, username, password: encryptedPassword });
+
     res.status(201).json({ message: 'User has been registered' });
   } catch (error) {
     console.error(error);
@@ -24,7 +26,7 @@ router.post('/register', async (req, res, next) => {
   }
 });
 
-router.post('/check-username', async (req, res, next) => {
+router.post('/check-username', async (req, res) => {
   try {
     const { username } = req.body;
     const user = await User.findOne({ where: { username } });
@@ -35,18 +37,21 @@ router.post('/check-username', async (req, res, next) => {
   }
 });
 
-router.post('/login', (req, res, next) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   const { error } = LoginCredentialsScheme.validate({ username, password });
   if (error?.details) return res.status(400).json({ message: error.details[0].message });
 
+  const user = await User.findOne({ where: { username } });
+  if (!user) return res.status(403).json({ message: 'User not found' });
+
+  const acceptedComparison = await User.comparePassword(password, user.password);
+  if (!acceptedComparison) return res.status(403).json({ message: 'Password do not match' });
+
   res.json({
     token: Math.random().toString(36).substring(2),
-    user: {
-      name: 'Andrei Putilouski',
-      username,
-    },
+    user: user.getPublicFields(),
   });
 });
 

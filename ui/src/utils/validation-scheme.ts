@@ -23,7 +23,7 @@ export const ValidateLoginCredentials = (credentials: LoginCredentials) => Valid
 
 const RegistrationCredentialsSchemeKeys = {
   ...LoginCredentialsSchemeKeys,
-  name: Joi.string().alphanum().min(3).max(50).required().label('Full Name'),
+  name: Joi.string().min(3).max(50).required().label('Full Name'),
   confirmPassword: Joi.any().equal(Joi.ref('password')).required().label('Confirm password').messages({ 'any.only': '{{#label}} does not match' }),
 };
 const RegistrationCredentialsScheme = Joi.object<RegistrationCredentials>(RegistrationCredentialsSchemeKeys);
