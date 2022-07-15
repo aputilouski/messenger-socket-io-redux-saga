@@ -32,7 +32,9 @@ const Login = () => {
 
   return (
     <div className="w-screen h-screen flex">
-      <form onSubmit={event => onSubmit(event, state.credentials)} className="max-w-sm w-full m-auto">
+      <form //
+        onSubmit={event => onSubmit(event, state.credentials)}
+        className="max-w-sm w-full m-auto">
         <Paper className="flex flex-col gap-3.5 p-4" elevation={5}>
           <h1 className="text-2xl mb-1.5">Login</h1>
 

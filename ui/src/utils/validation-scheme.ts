@@ -14,17 +14,21 @@ const ValidateScheme = <T>(fields: ValidateObject, scheme: Joi.ObjectSchema): { 
   } else return { errors: undefined };
 };
 
-const LoginCredentialsSchemeKeys = {
-  username: Joi.string().alphanum().min(3).max(30).required().label('Username'),
-  password: Joi.string().min(3).max(30).required().label('Password'),
-};
-const LoginCredentialsScheme = Joi.object<LoginCredentials>(LoginCredentialsSchemeKeys);
+const USERNAME = Joi.string().alphanum().min(3).max(30).required().label('Username');
+const PASSWORD = Joi.string().min(3).max(30).required().label('Password');
+const NAME = Joi.string().min(3).max(50).required().label('Full Name');
+const CONFIRM_PASSWORD = Joi.any().equal(Joi.ref('password')).required().label('Confirm password').messages({ 'any.only': '{{#label}} does not match' });
+
+const LoginCredentialsScheme = Joi.object<LoginCredentials>({ username: USERNAME, password: PASSWORD });
 export const ValidateLoginCredentials = (credentials: LoginCredentials) => ValidateScheme<LoginCredentials>(credentials, LoginCredentialsScheme);
 
-const RegistrationCredentialsSchemeKeys = {
-  ...LoginCredentialsSchemeKeys,
-  name: Joi.string().min(3).max(50).required().label('Full Name'),
-  confirmPassword: Joi.any().equal(Joi.ref('password')).required().label('Confirm password').messages({ 'any.only': '{{#label}} does not match' }),
-};
-const RegistrationCredentialsScheme = Joi.object<RegistrationCredentials>(RegistrationCredentialsSchemeKeys);
+const RegistrationCredentialsScheme = Joi.object<RegistrationCredentials>({
+  username: USERNAME,
+  password: PASSWORD,
+  name: NAME,
+  confirmPassword: CONFIRM_PASSWORD,
+});
 export const ValidateRegistrationCredentials = (credentials: RegistrationCredentials) => ValidateScheme<RegistrationCredentials>(credentials, RegistrationCredentialsScheme);
+
+const ProfileScheme = Joi.object<User>({ name: NAME, username: USERNAME });
+export const ValidateProfile = (profile: User) => ValidateScheme<User>(profile, ProfileScheme);

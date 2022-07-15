@@ -1,7 +1,7 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import authSlice, { AuthSlice } from '../slices/auth';
-import api, { getErrorMessage } from 'api';
-import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, LoginCredentials, RegistrationCredentials, StoreAction } from '../actions';
+import api, { getErrorMessage, setAccessToken } from 'api';
+import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, USER_UPDATE, LoginCredentials, RegistrationCredentials, StoreAction } from '../actions';
 import { RootState } from '../store';
 import { replace, LOCATION_CHANGE } from 'connected-react-router';
 
@@ -9,11 +9,12 @@ function* loginWorker(action: StoreAction<LoginCredentials>) {
   yield put(authSlice.actions.runLoading());
   try {
     const response: Awaited<ReturnType<typeof api.login>> = yield call(() => api.login(action.payload));
+    setAccessToken(response.data.token);
     yield put(authSlice.actions.login(response.data));
     yield put(replace('/channels'));
-  } catch (e) {
-    console.error(e);
-    yield put(authSlice.actions.catchError(getErrorMessage(e)));
+  } catch (error) {
+    console.error(error);
+    yield put(authSlice.actions.catchError(getErrorMessage(error)));
   }
 }
 
@@ -34,9 +35,9 @@ function* registerWorker(action: StoreAction<RegistrationCredentials>) {
   try {
     yield call(() => api.register(action.payload));
     yield put(replace('/'));
-  } catch (e) {
-    console.error(e);
-    yield put(authSlice.actions.catchError(getErrorMessage(e)));
+  } catch (error) {
+    console.error(error);
+    yield put(authSlice.actions.catchError(getErrorMessage(error)));
   }
 }
 
@@ -49,10 +50,26 @@ function* checkUsernameWorker(action: StoreAction<string>) {
   }
 }
 
+function* userUpdateWorker(action: StoreAction<{ user: User; callback: () => void }>) {
+  // yield put(authSlice.actions.runLoading());
+  try {
+    const { user, callback } = action.payload;
+    const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(user));
+    yield put(authSlice.actions.setUser(response.data.user));
+    console.log(response);
+
+    // callback();
+  } catch (error) {
+    console.error(error);
+    yield put(authSlice.actions.catchError(getErrorMessage(error)));
+  }
+}
+
 export default function* authWatcher() {
   yield takeEvery(LOGIN, loginWorker);
   yield takeEvery(LOGOUT, logoutWorker);
   yield takeEvery(REGISTRATION, registerWorker);
   yield takeEvery(CHECK_USERNAME, checkUsernameWorker);
+  yield takeEvery(USER_UPDATE, userUpdateWorker);
   yield takeLatest(LOCATION_CHANGE, resetWorker);
 }

@@ -10,6 +10,8 @@ const config = {
   postgres_user_password: process.env.POSTGRES_PASSWORD,
   postgres_host: process.env.POSTGRES_HOST,
   postgres_port: process.env.POSTGRES_PORT || 5432,
+
+  jwt_secret: process.env.JWT_SECRET,
 };
 
 debug(config);

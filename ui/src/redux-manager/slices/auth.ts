@@ -29,6 +29,7 @@ export default createSlice({
     runLoading: state => ({ ...state, loading: true, error: undefined }),
     catchError: (state, action: StoreAction<string>) => ({ ...state, loading: false, error: action.payload }),
     reset: state => ({ ...state, loading: false, error: undefined, userAvailable: undefined }),
-    setUserAvailable: (state, action: StoreAction<boolean>) => ({ ...state, userAvailable: action.payload }),
+    setUserAvailable: (state, action: StoreAction<boolean | undefined>) => ({ ...state, userAvailable: action.payload }),
+    setUser: (state, action: StoreAction<User>) => ({ ...state, user: action.payload }),
   },
 });

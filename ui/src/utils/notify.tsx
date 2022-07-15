@@ -7,7 +7,7 @@ const NotificationConfigurator = () => {
 };
 
 export const NotificationProvider = ({ children }: { children: JSX.Element }) => (
-  <SnackbarProvider maxSnack={3}>
+  <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
     <NotificationConfigurator />
     {children}
   </SnackbarProvider>

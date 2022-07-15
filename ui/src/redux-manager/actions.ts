@@ -1,4 +1,5 @@
 import { store } from './store';
+import authSlice from './slices/auth';
 
 export type StoreAction<T = any> = { type: string; payload: T };
 
@@ -14,3 +15,7 @@ export const register = (payload: RegistrationCredentials) => store.dispatch({ t
 
 export const CHECK_USERNAME = 'AUTH/CHECK_USERNAME';
 export const checkUsername = (payload: string) => store.dispatch({ type: CHECK_USERNAME, payload });
+export const setUserAvailable = authSlice.actions.setUserAvailable;
+
+export const USER_UPDATE = 'AUTH/USER_UPDATE';
+export const updateUser = (payload: { user: User; callback: () => void }) => store.dispatch({ type: USER_UPDATE, payload });
