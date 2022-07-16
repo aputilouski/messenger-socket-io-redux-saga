@@ -2,6 +2,7 @@ import { store } from './store';
 import authSlice from './slices/auth';
 
 export type StoreAction<T = any> = { type: string; payload: T };
+export type StoreActionPromise<T = any> = StoreAction<T> & { resolve: () => void; reject: () => void };
 
 export const LOGIN = 'AUTH/LOGIN';
 export const LOGOUT = 'AUTH/LOGOUT';
@@ -18,4 +19,4 @@ export const checkUsername = (payload: string) => store.dispatch({ type: CHECK_U
 export const setUserAvailable = authSlice.actions.setUserAvailable;
 
 export const USER_UPDATE = 'AUTH/USER_UPDATE';
-export const updateUser = (payload: { user: User; callback: () => void }) => store.dispatch({ type: USER_UPDATE, payload });
+export const updateUser = (payload: User) => new Promise((resolve, reject) => store.dispatch({ type: USER_UPDATE, payload, resolve, reject }));

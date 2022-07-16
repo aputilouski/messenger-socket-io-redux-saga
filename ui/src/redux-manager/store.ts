@@ -15,7 +15,7 @@ export const store = configureStore({
     auth: authSlice.reducer,
     router: connectRouter<Location>(history),
   },
-  middleware: getDefaultMiddleware => getDefaultMiddleware({ thunk: false }).concat(routerMiddleware(history), sagaMiddleware),
+  middleware: getDefaultMiddleware => getDefaultMiddleware({ thunk: false, serializableCheck: false }).concat(routerMiddleware(history), sagaMiddleware),
 });
 
 sagaMiddleware.run(rootSaga);

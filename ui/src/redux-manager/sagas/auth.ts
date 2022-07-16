@@ -1,7 +1,7 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import authSlice, { AuthSlice } from '../slices/auth';
 import api, { getErrorMessage, setAccessToken } from 'api';
-import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, USER_UPDATE, LoginCredentials, RegistrationCredentials, StoreAction } from '../actions';
+import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, USER_UPDATE, LoginCredentials, RegistrationCredentials, StoreAction, StoreActionPromise } from '../actions';
 import { RootState } from '../store';
 import { replace, LOCATION_CHANGE } from 'connected-react-router';
 
@@ -50,18 +50,17 @@ function* checkUsernameWorker(action: StoreAction<string>) {
   }
 }
 
-function* userUpdateWorker(action: StoreAction<{ user: User; callback: () => void }>) {
-  // yield put(authSlice.actions.runLoading());
+function* userUpdateWorker(action: StoreActionPromise<User>) {
+  yield put(authSlice.actions.runLoading());
+  const { payload, resolve, reject } = action;
   try {
-    const { user, callback } = action.payload;
-    const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(user));
+    const response: Awaited<ReturnType<typeof api.updateUser>> = yield call(() => api.updateUser(payload));
     yield put(authSlice.actions.setUser(response.data.user));
-    console.log(response);
-
-    // callback();
+    resolve();
   } catch (error) {
     console.error(error);
     yield put(authSlice.actions.catchError(getErrorMessage(error)));
+    reject();
   }
 }
 

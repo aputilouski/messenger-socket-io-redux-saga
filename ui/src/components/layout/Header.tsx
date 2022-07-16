@@ -38,7 +38,7 @@ const Header = () => {
     if (userNotAvailable) return;
     const { errors } = ValidateProfile(userdata);
     if (errors) setErrors(errors);
-    else updateUser({ user: userdata, callback: () => setOpen(false) });
+    else updateUser(userdata).then(() => setOpen(false));
   }, []);
 
   const userNotAvailable = userAvailable === false && user?.username !== userdata.username;
