@@ -1,7 +1,8 @@
 const { Server } = require('socket.io');
-const { User } = require('./models');
+const { User, Message } = require('./models');
 const { getUserByAccessToken } = require('./services/passport');
 const { Op } = require('sequelize');
+const debug = require('debug')('api:io');
 
 module.exports = server => {
   const io = new Server(server);
@@ -18,9 +19,8 @@ module.exports = server => {
   });
 
   io.on('connection', socket => {
-    console.log('a user connected');
-
     const uuid = socket.user.uuid;
+    debug('user connected: ' + uuid);
 
     socket.join(uuid);
 
@@ -31,12 +31,24 @@ module.exports = server => {
       socket.emit('rooms', users);
     });
 
-    socket.on('chat-messages', uuid => {
-      socket.emit('chat-messages', []);
+    socket.on('chat-messages', to => {
+      Message.findAll({
+        where: { from: uuid, to },
+        order: [['created_at', 'ASC']],
+      }).then(messages => {
+        socket.emit('chat-messages', messages);
+      });
+    });
+
+    socket.on('message-create', message => {
+      const { text, to } = message;
+      Message.create({ text, to, from: uuid }).then(message => {
+        socket.emit('message-created', message);
+      });
     });
 
     socket.on('disconnect', () => {
-      console.log('user disconnected');
+      debug('user disconnected: ' + uuid);
     });
   });
 };

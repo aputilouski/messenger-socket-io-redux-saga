@@ -12,6 +12,10 @@ declare global {
   };
 
   type Message = {
+    id: string;
     text: string;
+    from: string;
+    to: string;
+    created_at: string;
   };
 }

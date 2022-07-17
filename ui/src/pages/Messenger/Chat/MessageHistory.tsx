@@ -4,7 +4,7 @@ import Message from './Message';
 import { useStore } from 'redux-manager';
 
 const MessageHistory = () => {
-  const { loading, messages } = useStore(state => state.messenger.chat);
+  const { loading, messages, meta } = useStore(state => state.messenger.chat);
 
   const mountedRef = React.useRef(false);
   React.useEffect(() => {
@@ -18,36 +18,18 @@ const MessageHistory = () => {
   else
     return (
       <>
-        <div className="p-1.5 text-center border-b-2 absolute w-full">Selected User (last seen 15 min ago)</div>
-
+        {meta && <div className="p-1.5 text-center border-b-2 absolute w-full">{meta.room.name} (last seen 15 min ago)</div>}
         <div className="flex flex-col gap-2.5 overflow-hidden h-full p-2 pt-12" ref={containerRef}>
-          <Message //
-            my
-            read
-            container={containerRef.current}
-            appear={mountedRef.current}>
-            Some message text
-          </Message>
-
-          <Message //
-            read
-            container={containerRef.current}
-            appear={mountedRef.current}>
-            Some message text
-          </Message>
-
-          <Message //
-            my
-            container={containerRef.current}
-            appear={mountedRef.current}>
-            Some message text Some message text Some message text Some message text Some message text
-          </Message>
-
-          <Message //
-            container={containerRef.current}
-            appear={mountedRef.current}>
-            Some message text
-          </Message>
+          {messages.map(message => (
+            <Message //
+              key={message.id}
+              my={message.from === meta?.room.uuid}
+              // read
+              container={containerRef.current}
+              appear={mountedRef.current}>
+              {message.text}
+            </Message>
+          ))}
         </div>
       </>
     );

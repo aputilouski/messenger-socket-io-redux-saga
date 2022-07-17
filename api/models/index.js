@@ -11,9 +11,11 @@ const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_p
 });
 
 const User = require('./User')(db);
+const Message = require('./Message')(db);
 
 const models = {
   User,
+  Message,
 };
 
 Object.values(models).forEach(Model => {

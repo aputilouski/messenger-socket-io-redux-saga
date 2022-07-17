@@ -1,9 +1,10 @@
-import { call, take, put, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
+import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, USER_SELECT } from '../actions';
+import { StoreAction, StoreActionPromise, USER_SELECT, SEND_MESSAGE } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice from '../slices/messenger';
+import { RootState } from '../store';
 import { notify } from 'utils';
 
 function subscribe(socket: Socket) {
@@ -15,8 +16,11 @@ function subscribe(socket: Socket) {
     });
 
     socket.on('chat-messages', (messages: Message[]) => {
-      console.log(messages);
       emit(messengerSlice.actions.setChatMessages(messages));
+    });
+
+    socket.on('message-created', (message: Message) => {
+      emit(messengerSlice.actions.pushMessage(message));
     });
 
     //   socket.on('disconnect', e => {
@@ -41,16 +45,23 @@ function* read(socket: Socket) {
 }
 
 function* selectUserWorker(socket: Socket, action: StoreAction<User>) {
-  yield put(messengerSlice.actions.runLoading());
+  const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+  if (room && room.uuid === action.payload.uuid) return;
+  yield put(messengerSlice.actions.selectUser(action.payload));
   socket.emit('chat-messages', action.payload.uuid);
+}
+
+function* sendMessageWorker(socket: Socket, action: StoreActionPromise<string>) {
+  const { payload, resolve } = action;
+  const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+  if (!room) return;
+  socket.emit('message-create', { text: payload, to: room.uuid });
+  resolve();
 }
 
 function* write(socket: Socket) {
   yield takeEvery(USER_SELECT, selectUserWorker, socket);
-  // while (true) {
-  //   const { payload } = yield take(`${sendMessage}`);
-  //   socket.emit('message', payload);
-  // }
+  yield takeEvery(SEND_MESSAGE, sendMessageWorker, socket);
 }
 
 const connect = (token: string) =>

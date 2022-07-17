@@ -6,7 +6,11 @@ type MessengerSlice = {
   chat: {
     loading: boolean;
     messages: Message[] | undefined;
-    meta: any;
+    meta:
+      | {
+          room: User;
+        }
+      | undefined;
   };
 };
 
@@ -17,12 +21,16 @@ export default createSlice({
     chat: {
       loading: false,
       messages: undefined,
-      meta: null,
+      meta: undefined,
     },
   } as MessengerSlice,
   reducers: {
     setRooms: (state, action: StoreAction<User[]>) => ({ ...state, rooms: action.payload }),
-    runLoading: state => ({ ...state, chat: { ...state.chat, loading: true } }),
+    selectUser: (state, action: StoreAction<User>) => ({ ...state, chat: { ...state.chat, loading: true, meta: { room: action.payload } } }),
     setChatMessages: (state, action: StoreAction<Message[]>) => ({ ...state, chat: { ...state.chat, loading: false, messages: action.payload } }),
+    pushMessage: (state, action: StoreAction<Message>) => {
+      const messages: Message[] = state.chat.messages ? [...state.chat.messages, action.payload] : [action.payload];
+      return { ...state, chat: { ...state.chat, messages } };
+    },
   },
 });
