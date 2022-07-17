@@ -22,4 +22,9 @@ exports.generateUserAccessToken = user => {
   return jwt.encode({ uuid: user.uuid }, jwt_secret);
 };
 
+exports.getUserByAccessToken = token => {
+  const { uuid } = jwt.decode(token, jwt_secret);
+  return User.findOne({ where: { uuid } });
+};
+
 exports.verifyUser = passport.authenticate('bearer', { session: false });

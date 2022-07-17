@@ -1,19 +1,19 @@
 import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
 
-const RoomCard = () => (
-  <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }}>
+const RoomCard = ({ name, onClick }: { name: string; onClick: () => void }) => (
+  <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }} onClick={onClick}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
         <StyledBadge //
           overlap="circular"
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           variant="dot">
-          <Avatar>U</Avatar>
+          <Avatar>{name[0]}</Avatar>
         </StyledBadge>
       </div>
       <div className="grow">
         <div className="flex justify-between mb-1">
-          <p>User Name</p>
+          <p>{name}</p>
           <p className="text-xs text-gray-600">12/12/12</p>
         </div>
         <div className="flex justify-between text-xs ">

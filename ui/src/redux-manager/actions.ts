@@ -19,4 +19,8 @@ export const checkUsername = (payload: string) => store.dispatch({ type: CHECK_U
 export const setUserAvailable = authSlice.actions.setUserAvailable;
 
 export const USER_UPDATE = 'AUTH/USER_UPDATE';
-export const updateUser = (payload: User) => new Promise((resolve, reject) => store.dispatch({ type: USER_UPDATE, payload, resolve, reject }));
+export type Userdata = Omit<User, 'uuid'>;
+export const updateUser = (payload: Userdata) => new Promise((resolve, reject) => store.dispatch({ type: USER_UPDATE, payload, resolve, reject }));
+
+export const USER_SELECT = 'CHAT/USER_SELECT';
+export const selectUser = (payload: User) => store.dispatch({ type: USER_SELECT, payload });

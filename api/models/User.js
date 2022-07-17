@@ -30,7 +30,7 @@ const User = db => {
     { underscored: true }
   );
 
-  Model.publicAttributes = ['username', 'name'];
+  Model.publicAttributes = ['uuid', 'username', 'name'];
 
   Model.prototype.getPublicFields = function () {
     const user = this.get();

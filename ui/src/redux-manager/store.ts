@@ -1,19 +1,30 @@
 import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
-import { createBrowserHistory, Location } from 'history';
+import { createBrowserHistory, History, Location } from 'history';
 import { connectRouter, routerMiddleware } from 'connected-react-router';
 import rootSaga from './sagas';
 import authSlice from './slices/auth';
+import messengerSlice from './slices/messenger';
 import { useSelector, TypedUseSelectorHook } from 'react-redux';
 
-export const history = createBrowserHistory<Location>();
+// fix for react dev server hot updates
+export const createUniversalHistory = (): History<Location> => {
+  const history = window.browserHistory || createBrowserHistory();
+  if (process.env.NODE_ENV === 'development' && !window.browserHistory) {
+    window.browserHistory = history;
+  }
+  return history;
+};
+
+export const history = createUniversalHistory();
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
-    auth: authSlice.reducer,
     router: connectRouter<Location>(history),
+    auth: authSlice.reducer,
+    messenger: messengerSlice.reducer,
   },
   middleware: getDefaultMiddleware => getDefaultMiddleware({ thunk: false, serializableCheck: false }).concat(routerMiddleware(history), sagaMiddleware),
 });

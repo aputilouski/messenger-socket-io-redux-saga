@@ -48,10 +48,10 @@ router.post('/login', async (req, res) => {
     if (error?.details) return res.status(400).json({ message: error.details[0].message });
 
     const user = await User.findOne({ where: { username } });
-    if (!user) return res.status(403).json({ message: 'User not found' });
+    if (!user) return res.status(403).json({ message: 'Wrong credentials' });
 
     const passwordConfirmed = await user.confirmPassword(password);
-    if (!passwordConfirmed) return res.status(403).json({ message: 'Password do not match' });
+    if (!passwordConfirmed) return res.status(403).json({ message: 'Wrong credentials' });
 
     res.json({ token: generateUserAccessToken(user), user: user.getPublicFields() });
   } catch (error) {

@@ -1,14 +1,14 @@
 import React from 'react';
 import { Avatar, Button, IconButton, Dialog, DialogTitle, DialogContent, TextField, Alert } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useStore, logout, checkUsername, setUserAvailable, updateUser } from 'redux-manager';
+import { useStore, logout, checkUsername, setUserAvailable, updateUser, Userdata } from 'redux-manager';
 import { LoadingButton } from '@mui/lab';
 import { ValidateProfile } from 'utils/validation-scheme';
 
 const Header = () => {
   const { user, loading, userAvailable, error } = useStore(state => state.auth);
   const [open, setOpen] = React.useState<boolean>(false);
-  const [userdata, setUserdata] = React.useState<User>({ name: '', username: '' });
+  const [userdata, setUserdata] = React.useState<Userdata>({ name: '', username: '' });
   const [errors, setErrors] = React.useState<Partial<User>>({});
 
   React.useEffect(() => {
@@ -33,7 +33,7 @@ const Header = () => {
     });
   }, []);
 
-  const onSubmit = React.useCallback((event: React.FormEvent, userdata: User, userNotAvailable: boolean) => {
+  const onSubmit = React.useCallback((event: React.FormEvent, userdata: Userdata, userNotAvailable: boolean) => {
     event.preventDefault();
     if (userNotAvailable) return;
     const { errors } = ValidateProfile(userdata);

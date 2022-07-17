@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { LoginCredentials, RegistrationCredentials } from 'redux-manager';
+import { LoginCredentials, RegistrationCredentials, Userdata } from 'redux-manager';
 
 type ValidateObject = { [key: string]: string };
 const ValidateScheme = <T>(fields: ValidateObject, scheme: Joi.ObjectSchema): { errors: Partial<T> | undefined } => {
@@ -30,5 +30,5 @@ const RegistrationCredentialsScheme = Joi.object<RegistrationCredentials>({
 });
 export const ValidateRegistrationCredentials = (credentials: RegistrationCredentials) => ValidateScheme<RegistrationCredentials>(credentials, RegistrationCredentialsScheme);
 
-const ProfileScheme = Joi.object<User>({ name: NAME, username: USERNAME });
-export const ValidateProfile = (profile: User) => ValidateScheme<User>(profile, ProfileScheme);
+const ProfileScheme = Joi.object<Userdata>({ name: NAME, username: USERNAME });
+export const ValidateProfile = (profile: Userdata) => ValidateScheme<Userdata>(profile, ProfileScheme);
