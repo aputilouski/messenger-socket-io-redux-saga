@@ -29,7 +29,7 @@ export default createSlice({
     selectUser: (state, action: StoreAction<User>) => ({ ...state, chat: { ...state.chat, loading: true, meta: { room: action.payload } } }),
     setChatMessages: (state, action: StoreAction<Message[]>) => ({ ...state, chat: { ...state.chat, loading: false, messages: action.payload } }),
     pushMessage: (state, action: StoreAction<Message>) => {
-      const messages: Message[] = state.chat.messages ? [...state.chat.messages, action.payload] : [action.payload];
+      const messages: Message[] = state.chat.messages ? [action.payload, ...state.chat.messages] : [action.payload];
       return { ...state, chat: { ...state.chat, messages } };
     },
   },

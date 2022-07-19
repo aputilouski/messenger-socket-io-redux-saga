@@ -18,7 +18,7 @@ const Message = ({
 }) => {
   return (
     <Slide //
-      direction="up"
+      direction={my ? 'right' : 'left'}
       in={true}
       appear={appear}
       container={container}>

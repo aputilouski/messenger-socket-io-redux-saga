@@ -23,6 +23,15 @@ const SendMessage = () => {
     });
   }, []);
 
+  const onPressEnter = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      onSubmit();
+    },
+    [onSubmit]
+  );
+
   if (!meta) return null;
   return (
     <div className="flex gap-4 items-end">
@@ -33,7 +42,9 @@ const SendMessage = () => {
         fullWidth
         multiline
         maxRows={5}
+        onKeyPress={onPressEnter}
       />
+
       <div className="p-1">
         <Fab //
           onClick={onSubmit}

@@ -34,7 +34,7 @@ module.exports = server => {
     socket.on('chat-messages', to => {
       Message.findAll({
         where: { from: uuid, to },
-        order: [['created_at', 'ASC']],
+        order: [['created_at', 'DESC']],
       }).then(messages => {
         socket.emit('chat-messages', messages);
       });

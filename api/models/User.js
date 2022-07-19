@@ -33,9 +33,9 @@ const User = db => {
   Model.publicAttributes = ['uuid', 'username', 'name'];
 
   Model.prototype.getPublicFields = function () {
-    const user = this.get();
-    Object.keys(user).forEach(attribute => {
-      if (!Model.publicAttributes.includes(attribute)) delete user[attribute];
+    const user = {};
+    Model.publicAttributes.forEach(key => {
+      user[key] = this[key];
     });
     return user;
   };
