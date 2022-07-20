@@ -31,10 +31,12 @@ module.exports = server => {
       socket.emit('rooms', users);
     });
 
-    socket.on('messages', to => {
+    socket.on('messages', (to, offset = 0, limit = 25) => {
       Message.findAll({
         where: { from: uuid, to },
         order: [['created_at', 'DESC']],
+        offset,
+        limit,
       }).then(messages => {
         socket.emit('messages', to, messages);
       });

@@ -6,6 +6,7 @@ import { useStore } from 'redux-manager';
 
 const SendMessage = () => {
   const { meta } = useStore(state => state.messenger.chat);
+  const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');
   const textFieldRef = React.useRef<HTMLTextAreaElement>(null);
@@ -17,9 +18,11 @@ const SendMessage = () => {
   const onSubmit = React.useCallback(() => {
     const value = textRef.current;
     if (!value) return;
+    setLoading(true);
     sendMessage(value).then(() => {
       textRef.current = '';
       if (textFieldRef.current) textFieldRef.current.value = '';
+      setLoading(false);
     });
   }, []);
 
@@ -47,6 +50,7 @@ const SendMessage = () => {
 
       <div className="p-1">
         <Fab //
+          disabled={loading}
           onClick={onSubmit}
           color="primary"
           size="medium">

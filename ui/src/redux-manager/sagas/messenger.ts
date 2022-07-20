@@ -1,11 +1,22 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, USER_SELECT, SEND_MESSAGE } from '../actions';
+import { StoreAction, StoreActionPromise, USER_SELECT, SEND_MESSAGE, LOAD_MORE } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice from '../slices/messenger';
-import { RootState, messageStore } from '../store';
-import { notify } from 'utils';
+import { RootState } from '../store';
+import { notify, MESSAGES_LIMIT } from 'utils';
+
+const messageMap = new Map<string, Message[]>();
+const messageStore = {
+  getMessages: messageMap.get.bind(messageMap),
+  setMessages: messageMap.set.bind(messageMap),
+  pushMessage: (uuid: string, message: Message) => {
+    const messages = messageMap.get(uuid);
+    if (messages) messages.unshift(message);
+    else messageMap.set(uuid, [message]);
+  },
+};
 
 function subscribe(socket: Socket) {
   return eventChannel(emit => {
@@ -16,8 +27,10 @@ function subscribe(socket: Socket) {
     });
 
     socket.on('messages', (uuid: string, messages: Message[]) => {
-      messageStore.setMessages(uuid, [...messages]);
-      emit(messengerSlice.actions.setChatMessages(messages));
+      const _messages = messageStore.getMessages(uuid) || [];
+      const all = _messages.concat(messages);
+      messageStore.setMessages(uuid, all);
+      emit(messengerSlice.actions.setChatMessages({ messages: all, full: _messages.length === MESSAGES_LIMIT }));
     });
 
     socket.on('message:created', (uuid: string, message: Message) => {
@@ -46,30 +59,35 @@ function* read(socket: Socket) {
   }
 }
 
-function* selectUserWorker(socket: Socket, action: StoreAction<User>) {
+function* selectUser(socket: Socket, action: StoreAction<User>) {
   const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   if (room && room.uuid === action.payload.uuid) return;
   const messages = messageStore.getMessages(action.payload.uuid);
   if (!messages) {
     yield put(messengerSlice.actions.selectUser(action.payload));
-    socket.emit('messages', action.payload.uuid);
-    // socket.emit('messages', action.payload.uuid, 0, 25);
+    socket.emit('messages', action.payload.uuid, 0, MESSAGES_LIMIT);
   } else {
     yield put(messengerSlice.actions.setChat({ messages, room: action.payload }));
   }
 }
 
-function* sendMessageWorker(socket: Socket, action: StoreActionPromise<string>) {
+function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
-  const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
-  if (!room) return;
+  const room: User = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   socket.emit('message:create', { text: payload, to: room.uuid });
   resolve();
 }
 
+function* loadMore(socket: Socket) {
+  const room: User = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+  const messageOffset = messageStore.getMessages(room.uuid)?.length;
+  socket.emit('messages', room.uuid, messageOffset, MESSAGES_LIMIT);
+}
+
 function* write(socket: Socket) {
-  yield takeEvery(USER_SELECT, selectUserWorker, socket);
-  yield takeEvery(SEND_MESSAGE, sendMessageWorker, socket);
+  yield takeEvery(USER_SELECT, selectUser, socket);
+  yield takeEvery(SEND_MESSAGE, sendMessage, socket);
+  yield takeEvery(LOAD_MORE, loadMore, socket);
 }
 
 const connect = (token: string) =>

@@ -34,14 +34,3 @@ sagaMiddleware.run(rootSaga);
 export type RootState = ReturnType<typeof store.getState>;
 
 export const useStore: TypedUseSelectorHook<RootState> = useSelector;
-
-const messageMap = new Map<string, Message[]>();
-export const messageStore = {
-  getMessages: messageMap.get.bind(messageMap),
-  setMessages: messageMap.set.bind(messageMap),
-  pushMessage: (uuid: string, message: Message) => {
-    const messages = messageMap.get(uuid);
-    if (messages) messages.unshift(message);
-    else messageMap.set(uuid, [message]);
-  },
-};
