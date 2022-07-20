@@ -31,19 +31,19 @@ module.exports = server => {
       socket.emit('rooms', users);
     });
 
-    socket.on('chat-messages', to => {
+    socket.on('messages', to => {
       Message.findAll({
         where: { from: uuid, to },
         order: [['created_at', 'DESC']],
       }).then(messages => {
-        socket.emit('chat-messages', messages);
+        socket.emit('messages', to, messages);
       });
     });
 
-    socket.on('message-create', message => {
+    socket.on('message:create', message => {
       const { text, to } = message;
       Message.create({ text, to, from: uuid }).then(message => {
-        socket.emit('message-created', message);
+        socket.emit('message:created', to, message);
       });
     });
 

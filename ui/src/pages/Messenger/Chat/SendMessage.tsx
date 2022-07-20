@@ -34,7 +34,7 @@ const SendMessage = () => {
 
   if (!meta) return null;
   return (
-    <div className="flex gap-4 items-end">
+    <div className="flex gap-4 items-end p-2">
       <TextField //
         inputRef={textFieldRef}
         onChange={onChange}

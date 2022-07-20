@@ -4,7 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { StoreAction, StoreActionPromise, USER_SELECT, SEND_MESSAGE } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice from '../slices/messenger';
-import { RootState } from '../store';
+import { RootState, messageStore } from '../store';
 import { notify } from 'utils';
 
 function subscribe(socket: Socket) {
@@ -15,12 +15,14 @@ function subscribe(socket: Socket) {
       emit(messengerSlice.actions.setRooms(users));
     });
 
-    socket.on('chat-messages', (messages: Message[]) => {
+    socket.on('messages', (uuid: string, messages: Message[]) => {
+      messageStore.setMessages(uuid, [...messages]);
       emit(messengerSlice.actions.setChatMessages(messages));
     });
 
-    socket.on('message-created', (message: Message) => {
-      emit(messengerSlice.actions.pushMessage(message));
+    socket.on('message:created', (uuid: string, message: Message) => {
+      messageStore.pushMessage(uuid, message);
+      emit(messengerSlice.actions.pushChatMessage(message));
     });
 
     //   socket.on('disconnect', e => {
@@ -47,15 +49,21 @@ function* read(socket: Socket) {
 function* selectUserWorker(socket: Socket, action: StoreAction<User>) {
   const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   if (room && room.uuid === action.payload.uuid) return;
-  yield put(messengerSlice.actions.selectUser(action.payload));
-  socket.emit('chat-messages', action.payload.uuid);
+  const messages = messageStore.getMessages(action.payload.uuid);
+  if (!messages) {
+    yield put(messengerSlice.actions.selectUser(action.payload));
+    socket.emit('messages', action.payload.uuid);
+    // socket.emit('messages', action.payload.uuid, 0, 25);
+  } else {
+    yield put(messengerSlice.actions.setChat({ messages, room: action.payload }));
+  }
 }
 
 function* sendMessageWorker(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
   const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   if (!room) return;
-  socket.emit('message-create', { text: payload, to: room.uuid });
+  socket.emit('message:create', { text: payload, to: room.uuid });
   resolve();
 }
 
