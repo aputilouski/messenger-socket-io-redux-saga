@@ -16,6 +16,6 @@ declare global {
     text: string;
     from: string;
     to: string;
-    created_at: string;
+    createdAt: string;
   };
 }

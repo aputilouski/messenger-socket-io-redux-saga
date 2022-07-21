@@ -4,9 +4,17 @@ import clsx from 'clsx';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
 
-const Message = React.forwardRef<HTMLDivElement, { my?: boolean; read?: boolean; container: Element | null; children?: string }>(
+type MessageProps = {
+  my?: boolean;
+  read?: boolean;
+  time: string;
+  container: Element | null;
+  children?: string;
+};
+
+const Message = React.forwardRef<HTMLDivElement, MessageProps>(
   (
-    { my = false, read = false, container, children },
+    { my = false, read = false, time, container, children },
     ref //
   ) => (
     <Slide //
@@ -21,7 +29,7 @@ const Message = React.forwardRef<HTMLDivElement, { my?: boolean; read?: boolean;
         elevation={4}>
         <p className="whitespace-pre-line text-white">{children}</p>
         <p className="text-xs text-white relative top-1 -right-1.5 flex justify-end align-center gap-1.5">
-          <span>12:12</span>
+          <span>{time}</span>
           {!my && (read ? <StyledDoneAllRoundedIcon /> : <StyledDoneRoundedIcon />)}
         </p>
       </Paper>

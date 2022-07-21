@@ -5,6 +5,7 @@ import { useInView } from 'react-intersection-observer';
 import Message from './Message';
 import { useStore, loadMore } from 'redux-manager';
 import { MESSAGES_LIMIT } from 'utils';
+import moment from 'moment';
 
 const MessageHistory = () => {
   const { loading, full, messages } = useStore(state => state.messenger.chat);
@@ -26,7 +27,7 @@ const MessageHistory = () => {
   }, [inView, full]);
 
   const withMessageRef = Boolean(messages && messages.length >= MESSAGES_LIMIT);
-
+  let date: string | undefined = messages && moment(messages[0].createdAt).format('MMMM DD');
   return (
     <div className="grow relative">
       {loading ? (
@@ -36,16 +37,25 @@ const MessageHistory = () => {
       ) : (
         <Scrollbars ref={scrollbarRef}>
           <div className="flex flex-col-reverse gap-2.5 p-3 pt-2 overflow-hidden" ref={containerRef}>
-            {messages.map((message, index) => (
-              <Message //
-                key={message.id}
-                ref={withMessageRef && index === messages.length - 5 ? ref : undefined}
-                my={message.from === myUuid}
-                // read
-                container={containerRef.current}>
-                {message.text}
-              </Message>
-            ))}
+            {messages.map((message, index) => {
+              const newDate = moment(message.createdAt).format('MMMM DD');
+              const showDate = newDate !== date;
+              const Date = showDate ? <p className="text-center text-sm py-1">{date}</p> : null;
+              date = newDate;
+              return (
+                <React.Fragment key={message.id}>
+                  {Date}
+                  <Message //
+                    ref={withMessageRef && index === messages.length - 5 ? ref : undefined}
+                    my={message.from === myUuid}
+                    time={moment(message.createdAt).format('HH:mm')}
+                    // read
+                    container={containerRef.current}>
+                    {message.text}
+                  </Message>
+                </React.Fragment>
+              );
+            })}
           </div>
         </Scrollbars>
       )}
