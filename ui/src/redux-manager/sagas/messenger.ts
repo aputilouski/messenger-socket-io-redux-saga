@@ -1,7 +1,7 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, USER_SELECT, SEND_MESSAGE, LOAD_MORE } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice from '../slices/messenger';
 import { RootState } from '../store';
@@ -22,8 +22,18 @@ function subscribe(socket: Socket) {
   return eventChannel(emit => {
     socket.off('connect_error');
 
-    socket.on('rooms', (users: User[]) => {
-      emit(messengerSlice.actions.setRooms(users));
+    socket.on('rooms', (rooms: UserRoom[]) => {
+      emit(messengerSlice.actions.setRooms(rooms));
+    });
+
+    socket.on('user:connected', (uuid: string) => {
+      console.log('user:connected', uuid);
+      emit(messengerSlice.actions.userConnect({ uuid, connected: true }));
+    });
+
+    socket.on('user:disconnected', (uuid: string) => {
+      console.log('user:disconnected', uuid);
+      emit(messengerSlice.actions.userConnect({ uuid, connected: false }));
     });
 
     socket.on('messages', (uuid: string, messages: Message[]) => {
@@ -59,12 +69,12 @@ function* read(socket: Socket) {
   }
 }
 
-function* selectUser(socket: Socket, action: StoreAction<User>) {
-  const room: User | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+function* selectRoom(socket: Socket, action: StoreAction<UserRoom>) {
+  const room: UserRoom | undefined = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   if (room && room.uuid === action.payload.uuid) return;
   const messages = messageStore.getMessages(action.payload.uuid);
   if (!messages) {
-    yield put(messengerSlice.actions.selectUser(action.payload));
+    yield put(messengerSlice.actions.selectRoom(action.payload));
     socket.emit('messages', action.payload.uuid, 0, MESSAGES_LIMIT);
   } else {
     yield put(messengerSlice.actions.setChat({ messages, room: action.payload }));
@@ -73,19 +83,19 @@ function* selectUser(socket: Socket, action: StoreAction<User>) {
 
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
-  const room: User = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+  const room: UserRoom = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   socket.emit('message:create', { text: payload, to: room.uuid });
   resolve();
 }
 
 function* loadMore(socket: Socket) {
-  const room: User = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
+  const room: UserRoom = yield select(({ messenger }: RootState) => messenger.chat.meta?.room);
   const messageOffset = messageStore.getMessages(room.uuid)?.length;
   socket.emit('messages', room.uuid, messageOffset, MESSAGES_LIMIT);
 }
 
 function* write(socket: Socket) {
-  yield takeEvery(USER_SELECT, selectUser, socket);
+  yield takeEvery(SELECT_ROOM, selectRoom, socket);
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
 }

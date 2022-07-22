@@ -7,6 +7,7 @@ import DoneAllRoundedIcon from '@mui/icons-material/DoneAllRounded';
 type MessageProps = {
   my?: boolean;
   read?: boolean;
+  appear?: boolean;
   time: string;
   container: Element | null;
   children?: string;
@@ -14,13 +15,13 @@ type MessageProps = {
 
 const Message = React.forwardRef<HTMLDivElement, MessageProps>(
   (
-    { my = false, read = false, time, container, children },
+    { my = false, read = false, appear = false, time, container, children },
     ref //
   ) => (
     <Slide //
       direction={my ? 'left' : 'right'}
       in={true}
-      // appear={appear}
+      appear={appear}
       container={container}>
       <Paper //
         ref={ref}

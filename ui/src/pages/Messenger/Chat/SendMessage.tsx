@@ -5,7 +5,7 @@ import { sendMessage } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const SendMessage = () => {
-  const { meta } = useStore(state => state.messenger.chat);
+  const meta = useStore(state => state.messenger.chat.meta);
   const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');

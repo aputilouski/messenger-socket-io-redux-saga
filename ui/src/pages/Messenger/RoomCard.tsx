@@ -1,10 +1,11 @@
 import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
 
-const RoomCard = ({ name, onClick }: { name: string; onClick: () => void }) => (
+const RoomCard = ({ name, connected, onClick }: { name: string; connected: boolean; onClick: () => void }) => (
   <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }} onClick={onClick}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
         <StyledBadge //
+          invisible={!connected}
           overlap="circular"
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           variant="dot">

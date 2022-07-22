@@ -2,35 +2,39 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
 const User = db => {
-  const Model = db.define(
-    'user',
-    {
-      uuid: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
-      },
-      username: {
-        type: DataTypes.STRING(30),
-        unique: true,
-        allowNull: false,
-        validate: { len: [3, 30] },
-      },
-      name: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        validate: { len: [3, 50] },
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: { notEmpty: true },
-      },
+  const Model = db.define('user', {
+    uuid: {
+      type: Sequelize.UUID,
+      defaultValue: Sequelize.UUIDV4,
+      primaryKey: true,
     },
-    { underscored: true }
-  );
+    username: {
+      type: DataTypes.STRING(30),
+      unique: true,
+      allowNull: false,
+      validate: { len: [3, 30] },
+    },
+    name: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      validate: { len: [3, 50] },
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: true },
+    },
+    connected: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    disconnected_at: {
+      type: DataTypes.DATE,
+    },
+  });
 
-  Model.publicAttributes = ['uuid', 'username', 'name'];
+  Model.publicAttributes = ['uuid', 'username', 'name', 'connected', 'disconnected_at'];
 
   Model.prototype.getPublicFields = function () {
     const user = {};

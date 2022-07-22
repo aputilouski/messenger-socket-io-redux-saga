@@ -8,6 +8,12 @@ const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_p
   port: env.postgres_port,
   dialect: 'postgres',
   logging: env.is_development ? str => debug(str) : false,
+  define: {
+    timestamps: true,
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
 });
 
 const User = require('./User')(db);

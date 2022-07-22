@@ -2,14 +2,14 @@ import { createSlice } from '@reduxjs/toolkit';
 import { StoreAction } from '../actions';
 
 type MessengerSlice = {
-  rooms: User[] | undefined;
+  rooms: UserRoom[] | undefined;
   chat: {
     loading: boolean;
     full: boolean;
     messages: Message[] | undefined;
     meta:
       | {
-          room: User;
+          room: UserRoom;
         }
       | undefined;
   };
@@ -27,13 +27,18 @@ export default createSlice({
     },
   } as MessengerSlice,
   reducers: {
-    setRooms: (state, action: StoreAction<User[]>) => ({ ...state, rooms: action.payload }),
-    selectUser: (state, action: StoreAction<User>) => {
+    setRooms: (state, action: StoreAction<UserRoom[]>) => ({ ...state, rooms: action.payload }),
+    userConnect: (state, action: StoreAction<{ uuid: string; connected: boolean }>) => {
+      const { uuid, connected } = action.payload;
+      const room = state.rooms?.find(room => room.uuid === uuid);
+      if (room) room.connected = connected;
+    },
+    selectRoom: (state, action: StoreAction<UserRoom>) => {
       state.chat.loading = true;
       state.chat.full = false;
       state.chat.meta = { room: action.payload };
     },
-    setChat: (state, action: StoreAction<{ room: User; messages: Message[] }>) => {
+    setChat: (state, action: StoreAction<{ room: UserRoom; messages: Message[] }>) => {
       state.chat.full = false;
       state.chat.meta = { room: action.payload.room };
       state.chat.messages = Object.assign([], action.payload.messages);

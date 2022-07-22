@@ -1,10 +1,10 @@
 import { CircularProgress, TextField } from '@mui/material';
 import RoomCard from './RoomCard';
-import { selectUser } from 'redux-manager';
+import { selectRoom } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const Rooms = () => {
-  const { rooms } = useStore(state => state.messenger);
+  const rooms = useStore(state => state.messenger.rooms);
   return (
     <div className="flex flex-col h-full">
       <div className="p-2">
@@ -23,11 +23,12 @@ const Rooms = () => {
       </div>
       <div className="grow p-2 flex flex-col gap-2.5">
         {rooms ? (
-          rooms.map(user => (
+          rooms.map(room => (
             <RoomCard //
-              key={user.uuid}
-              onClick={() => selectUser(user)}
-              name={user.name}
+              key={room.uuid}
+              onClick={() => selectRoom(room)}
+              name={room.name}
+              connected={room.connected}
             />
           ))
         ) : (

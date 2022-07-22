@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
 const { User, Message } = require('./models');
 const { getUserByAccessToken } = require('./services/passport');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const debug = require('debug')('api:io');
 
 module.exports = server => {
@@ -21,6 +21,9 @@ module.exports = server => {
   io.on('connection', socket => {
     const uuid = socket.user.uuid;
     debug('user connected: ' + uuid);
+
+    socket.user.connected = true;
+    socket.user.save();
 
     socket.join(uuid);
 
@@ -49,8 +52,15 @@ module.exports = server => {
       });
     });
 
+    socket.broadcast.emit('user:connected', uuid);
+
     socket.on('disconnect', () => {
       debug('user disconnected: ' + uuid);
+      socket.user.connected = false;
+      socket.user.disconnected_at = Sequelize.fn('NOW');
+      socket.user.save();
+
+      socket.broadcast.emit('user:disconnected', uuid);
     });
   });
 };

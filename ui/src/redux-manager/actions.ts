@@ -22,8 +22,8 @@ export const USER_UPDATE = 'AUTH/USER_UPDATE';
 export type Userdata = Omit<User, 'uuid'>;
 export const updateUser = (payload: Userdata) => new Promise((resolve, reject) => store.dispatch({ type: USER_UPDATE, payload, resolve, reject }));
 
-export const USER_SELECT = 'CHAT/USER_SELECT';
-export const selectUser = (payload: User) => store.dispatch({ type: USER_SELECT, payload });
+export const SELECT_ROOM = 'CHAT/SELECT_ROOM';
+export const selectRoom = (payload: UserRoom) => store.dispatch({ type: SELECT_ROOM, payload });
 
 export const SEND_MESSAGE = 'CHAT/SEND_MESSAGE';
 export const sendMessage = (payload: string) => new Promise((resolve, reject) => store.dispatch({ type: SEND_MESSAGE, payload, resolve, reject }));
