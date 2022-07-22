@@ -1,6 +1,6 @@
 import React from 'react';
 import { CircularProgress } from '@mui/material';
-import { Scrollbars } from 'react-custom-scrollbars';
+import { positionValues, Scrollbars } from 'react-custom-scrollbars';
 import { useInView } from 'react-intersection-observer';
 import Message from './Message';
 import { useStore, loadMore } from 'redux-manager';
@@ -16,10 +16,18 @@ const MessageHistory = () => {
 
   const scrollbarRef = React.useRef<Scrollbars>(null);
 
-  const firstMessage = messages?.find(m => m.from === myUuid);
+  const scrollModeRef = React.useRef<boolean>(false);
+
+  const onScroll = React.useCallback((values: positionValues) => {
+    const { clientHeight, scrollHeight, scrollTop } = values;
+    scrollModeRef.current = clientHeight + scrollTop < scrollHeight;
+  }, []);
+
+  const firstMessage = messages && messages[0];
   React.useEffect(() => {
-    scrollbarRef.current?.scrollToBottom();
-  }, [firstMessage]);
+    if (!scrollbarRef.current || (scrollModeRef.current && firstMessage?.from !== myUuid)) return;
+    scrollbarRef.current.scrollToBottom();
+  }, [firstMessage, myUuid]);
 
   React.useEffect(() => {
     if (!inView || full) return;
@@ -35,7 +43,7 @@ const MessageHistory = () => {
       ) : !messages ? (
         <p className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">Select a chat to start messaging</p>
       ) : (
-        <Scrollbars ref={scrollbarRef}>
+        <Scrollbars ref={scrollbarRef} onUpdate={onScroll}>
           <div className="flex flex-col-reverse gap-2.5 p-3 pt-2 overflow-hidden" ref={containerRef}>
             {messages.map((message, index) => {
               const newDate = moment(message.created_at).format('MMMM DD');

@@ -36,7 +36,12 @@ module.exports = server => {
 
     socket.on('messages', (to, offset = 0, limit = 25) => {
       Message.findAll({
-        where: { from: uuid, to },
+        where: {
+          [Op.or]: [
+            { from: uuid, to },
+            { from: to, to: uuid },
+          ],
+        },
         order: [['created_at', 'DESC']],
         offset,
         limit,
@@ -48,7 +53,7 @@ module.exports = server => {
     socket.on('message:create', message => {
       const { text, to } = message;
       Message.create({ text, to, from: uuid }).then(message => {
-        socket.emit('message:created', to, message);
+        io.to(to).to(uuid).emit('message:created', to, message);
       });
     });
 
@@ -56,11 +61,12 @@ module.exports = server => {
 
     socket.on('disconnect', () => {
       debug('user disconnected: ' + uuid);
+
       socket.user.connected = false;
-      socket.user.disconnected_at = Sequelize.fn('NOW');
+      socket.user.disconnected_at = new Date();
       socket.user.save();
 
-      socket.broadcast.emit('user:disconnected', uuid);
+      socket.broadcast.emit('user:disconnected', uuid, socket.user.disconnected_at);
     });
   });
 };

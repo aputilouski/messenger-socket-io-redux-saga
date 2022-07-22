@@ -5,7 +5,7 @@ import { sendMessage } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const SendMessage = () => {
-  const meta = useStore(state => state.messenger.chat.meta);
+  const room = useStore(state => state.messenger.chat.room);
   const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');
@@ -35,7 +35,7 @@ const SendMessage = () => {
     [onSubmit]
   );
 
-  if (!meta) return null;
+  if (!room) return null;
   return (
     <div className="flex gap-4 items-end p-2">
       <TextField //

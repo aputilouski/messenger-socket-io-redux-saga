@@ -1,17 +1,13 @@
 const { DataTypes } = require('sequelize');
 
 const Message = db => {
-  const Model = db.define(
-    'message',
-    {
-      text: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        validate: { notEmpty: true },
-      },
+  const Model = db.define('message', {
+    text: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: { notEmpty: true },
     },
-    { underscored: true }
-  );
+  });
 
   Model.associate = models => {
     Model.belongsTo(models.User, {

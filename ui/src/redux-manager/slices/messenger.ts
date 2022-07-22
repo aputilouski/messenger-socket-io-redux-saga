@@ -7,11 +7,7 @@ type MessengerSlice = {
     loading: boolean;
     full: boolean;
     messages: Message[] | undefined;
-    meta:
-      | {
-          room: UserRoom;
-        }
-      | undefined;
+    room: string | undefined;
   };
 };
 
@@ -23,25 +19,31 @@ export default createSlice({
       loading: false,
       full: false,
       messages: undefined,
-      meta: undefined,
+      room: undefined,
     },
   } as MessengerSlice,
   reducers: {
-    setRooms: (state, action: StoreAction<UserRoom[]>) => ({ ...state, rooms: action.payload }),
-    userConnect: (state, action: StoreAction<{ uuid: string; connected: boolean }>) => {
-      const { uuid, connected } = action.payload;
-      const room = state.rooms?.find(room => room.uuid === uuid);
-      if (room) room.connected = connected;
+    setRooms: (state, action: StoreAction<UserRoom[]>) => {
+      state.rooms = action.payload;
     },
-    selectRoom: (state, action: StoreAction<UserRoom>) => {
+    userConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
+      const { uuid, connected, disconnected_at } = action.payload;
+      const room = state.rooms?.find(room => room.uuid === uuid);
+      if (room) {
+        room.connected = connected;
+        if (disconnected_at) room.disconnected_at = disconnected_at;
+      }
+    },
+    selectRoom: (state, action: StoreAction<string>) => {
       state.chat.loading = true;
       state.chat.full = false;
-      state.chat.meta = { room: action.payload };
+      state.chat.room = action.payload;
     },
-    setChat: (state, action: StoreAction<{ room: UserRoom; messages: Message[] }>) => {
+    setChat: (state, action: StoreAction<{ room: string; messages: Message[] }>) => {
+      const { room, messages } = action.payload;
       state.chat.full = false;
-      state.chat.meta = { room: action.payload.room };
-      state.chat.messages = Object.assign([], action.payload.messages);
+      state.chat.room = room;
+      state.chat.messages = Object.assign([], messages);
     },
     setChatMessages: function (state, action: StoreAction<{ messages: Message[]; full: boolean }>) {
       const { messages, full } = action.payload;

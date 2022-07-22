@@ -11,18 +11,22 @@ declare global {
     uuid: string;
   };
 
-  type UserRoom = {
-    uuid: string;
-    name: string;
-    connected: boolean;
-    disconnected_at?: string;
-  };
-
   type Message = {
     id: string;
     text: string;
     from: string;
     to: string;
     created_at: string;
+  };
+
+  type Room = {
+    uuid: string;
+    name: string;
+    messages: Message[];
+  };
+
+  type UserRoom = Room & {
+    connected: boolean;
+    disconnected_at?: string;
   };
 }
