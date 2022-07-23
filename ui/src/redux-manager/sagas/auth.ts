@@ -1,5 +1,6 @@
 import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
 import authSlice, { AuthSlice } from '../slices/auth';
+import messengerSlice from '../slices/messenger';
 import api, { getErrorMessage, setAccessToken } from 'api';
 import { LOGIN, LOGOUT, REGISTRATION, CHECK_USERNAME, USER_UPDATE, LoginCredentials, RegistrationCredentials, StoreAction, StoreActionPromise } from '../actions';
 import { RootState } from '../store';
@@ -20,6 +21,7 @@ function* loginWorker(action: StoreAction<LoginCredentials>) {
 
 function* logoutWorker() {
   yield put(authSlice.actions.logout());
+  yield put(messengerSlice.actions.quit());
 }
 
 function* resetWorker() {

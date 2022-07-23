@@ -52,7 +52,18 @@ module.exports = server => {
 
     socket.join(uuid);
 
-    socket.emit('rooms', user.rooms);
+    const subscribers = [];
+    const subscriberRooms = user.rooms
+      .filter(room => room.users.length === 1)
+      .map(room => {
+        const companion = room.users[0];
+        subscribers.push(companion);
+        room.dataValues.companion = companion.uuid;
+        delete room.dataValues.users;
+        return room;
+      });
+
+    socket.emit('initialization', subscriberRooms, subscribers);
 
     socket.on('messages', (room_id, offset = 0, limit = 25) => {
       // console.log(room_id, offset, limit);
@@ -77,7 +88,7 @@ module.exports = server => {
       });
     });
 
-    // socket.broadcast.emit('user:connected', uuid);
+    socket.to(subscribers.map(user => user.uuid)).emit('user:connected', uuid);
 
     socket.on('disconnect', () => {
       debug('user disconnected: ' + uuid);
@@ -86,7 +97,7 @@ module.exports = server => {
       user.disconnected_at = new Date();
       user.save();
 
-      // socket.broadcast.emit('user:disconnected', uuid, socket.user.disconnected_at);
+      socket.to(subscribers.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
     });
   });
 };

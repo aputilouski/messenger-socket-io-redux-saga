@@ -27,19 +27,19 @@ const MessageHistory = () => {
     scrollModeRef.current = clientHeight + scrollTop < scrollHeight;
   }, []);
 
-  const firstMessage = messages && messages[0];
+  const lastMessage: Message | undefined = messages[0];
   React.useEffect(() => {
-    if (!scrollbarRef.current || (scrollModeRef.current && firstMessage?.from !== myUuid)) return;
+    if (!scrollbarRef.current || (scrollModeRef.current && lastMessage?.from !== myUuid)) return;
     scrollbarRef.current.scrollToBottom();
-  }, [firstMessage, myUuid]);
+  }, [myUuid, lastMessage, messages.length]);
 
   React.useEffect(() => {
     if (!inView || full) return;
     loadMore();
   }, [inView, full]);
 
-  const withMessageRef = Boolean(messages && messages.length >= MESSAGES_LIMIT);
-  let date: string | undefined = messages && moment(messages[0]?.created_at).format('MMMM DD');
+  const withMessageRef = Boolean(messages.length >= MESSAGES_LIMIT);
+  let date: string | undefined = moment(lastMessage?.created_at).format('MMMM DD');
   return (
     <div className="grow relative">
       {loading ? (
@@ -68,6 +68,7 @@ const MessageHistory = () => {
                 </React.Fragment>
               );
             })}
+            {messages.length !== 0 && <p className="text-center text-sm py-1">{moment(messages[messages.length - 1].created_at).format('MMMM DD')}</p>}
           </div>
         </Scrollbars>
       )}

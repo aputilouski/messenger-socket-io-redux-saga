@@ -23,7 +23,7 @@ declare global {
 
   type Room = {
     id: number;
-    users: User[];
+    companion: string;
     messages: Message[];
     initialized?: boolean;
   };

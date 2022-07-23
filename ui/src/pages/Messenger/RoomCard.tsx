@@ -1,6 +1,7 @@
 import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
+import { timestampFormat } from 'utils';
 
-const RoomCard = ({ name, connected, onClick }: { name: string; connected: boolean; onClick: () => void }) => (
+const RoomCard = ({ name, connected, lastMessage, onClick }: { name: string; connected: boolean; lastMessage?: Message; onClick: () => void }) => (
   <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }} onClick={onClick}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
@@ -15,10 +16,10 @@ const RoomCard = ({ name, connected, onClick }: { name: string; connected: boole
       <div className="grow">
         <div className="flex justify-between mb-1">
           <p>{name}</p>
-          <p className="text-xs text-gray-600">12/12/12</p>
+          <p className="text-xs text-gray-600">{lastMessage && timestampFormat(lastMessage.created_at)}</p>
         </div>
-        <div className="flex justify-between text-xs ">
-          <p className="grow text-gray-600">Last message text...</p>
+        <div className="flex justify-between text-xs gap-4">
+          <p className="grow text-gray-600 w-0 truncate">{lastMessage?.text}</p>
           <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">1</p>
         </div>
       </div>

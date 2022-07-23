@@ -1,25 +1,25 @@
 import { useStore } from 'redux-manager';
-import moment from 'moment';
+import { timestampFormat } from 'utils';
 
 const Header = () => {
   const roomID = useStore(state => state.messenger.chat.roomID);
   const rooms = useStore(state => state.messenger.rooms);
-
+  const subscribers = useStore(state => state.messenger.subscribers);
   if (!roomID) return null;
   else {
     const room = rooms?.find(room => room.id === roomID);
     if (!room) return null;
-    const user = room.users[0];
-    if (!user) return null;
-    const lastSeen = user.connected //
+    const companion = subscribers.find(user => user.uuid === room.companion);
+    if (!companion) return null;
+    const lastSeen = companion.connected //
       ? 'online'
-      : user.disconnected_at
-      ? 'last seen ' + moment(user.disconnected_at).format('MM.DD.YYYY H:mm')
+      : companion.disconnected_at
+      ? 'last seen ' + timestampFormat(companion.disconnected_at)
       : null;
 
     return roomID ? (
       <div className="p-1.5 text-center w-full bg-white">
-        {user.name}
+        {companion.name}
         {lastSeen && ` - ${lastSeen}`}
       </div>
     ) : null;

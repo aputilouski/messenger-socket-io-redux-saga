@@ -5,6 +5,7 @@ import { useStore } from 'redux-manager';
 
 const Rooms = () => {
   const rooms = useStore(state => state.messenger.rooms);
+  const subscribers = useStore(state => state.messenger.subscribers);
   return (
     <div className="flex flex-col h-full">
       <div className="p-2">
@@ -24,14 +25,15 @@ const Rooms = () => {
       <div className="grow p-2 flex flex-col gap-2.5">
         {rooms ? (
           rooms.map(room => {
-            const user = room.users[0];
-            if (!user) return null;
+            const companion = subscribers.find(user => user.uuid === room.companion);
+            if (!companion) return null;
             return (
               <RoomCard //
                 key={room.id}
                 onClick={() => selectRoom(room.id)}
-                name={user.name}
-                connected={user.connected}
+                name={companion.name}
+                connected={companion.connected}
+                lastMessage={room.messages[0]}
               />
             );
           })

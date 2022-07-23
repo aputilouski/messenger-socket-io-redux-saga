@@ -4,6 +4,7 @@ import { MESSAGES_LIMIT } from 'utils';
 
 export type MessengerSlice = {
   rooms: Room[] | undefined;
+  subscribers: User[];
   chat: {
     loading: boolean;
     full: boolean;
@@ -15,24 +16,35 @@ export default createSlice({
   name: 'messenger',
   initialState: {
     rooms: undefined,
+    subscribers: [],
     chat: {
       loading: false,
       full: false,
-      messages: undefined,
       roomID: undefined,
     },
   } as MessengerSlice,
   reducers: {
-    setRooms: (state, action: StoreAction<Room[]>) => {
-      state.rooms = action.payload;
+    init: (state, action: StoreAction<{ rooms: Room[]; subscribers: User[] }>) => {
+      const { rooms, subscribers } = action.payload;
+      state.rooms = rooms;
+      state.subscribers = subscribers;
     },
-    userConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
+    quit: state => {
+      state.rooms = undefined;
+      state.subscribers = [];
+      state.chat = {
+        loading: false,
+        full: false,
+        roomID: undefined,
+      };
+    },
+    subscriberConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
       const { uuid, connected, disconnected_at } = action.payload;
-      // const room = state.rooms?.find(room => room.uuid === uuid);
-      // if (room) {
-      //   room.connected = connected;
-      //   if (disconnected_at) room.disconnected_at = disconnected_at;
-      // }
+      const user = state.subscribers.find(user => user.uuid === uuid);
+      if (user) {
+        user.connected = connected;
+        if (disconnected_at) user.disconnected_at = disconnected_at;
+      }
     },
     selectRoom: (state, action: StoreAction<number>) => {
       state.chat.loading = true;

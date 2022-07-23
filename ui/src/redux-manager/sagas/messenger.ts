@@ -11,16 +11,16 @@ function subscribe(socket: Socket) {
   return eventChannel(emit => {
     socket.off('connect_error');
 
-    socket.on('rooms', (rooms: Room[]) => {
-      emit(messengerSlice.actions.setRooms(rooms));
+    socket.on('initialization', (rooms: Room[], subscribers: User[]) => {
+      emit(messengerSlice.actions.init({ rooms, subscribers }));
     });
 
     socket.on('user:connected', (uuid: string) => {
-      // emit(messengerSlice.actions.userConnect({ uuid, connected: true }));
+      emit(messengerSlice.actions.subscriberConnect({ uuid, connected: true }));
     });
 
     socket.on('user:disconnected', (uuid: string, disconnected_at) => {
-      // emit(messengerSlice.actions.userConnect({ uuid, connected: false, disconnected_at }));
+      emit(messengerSlice.actions.subscriberConnect({ uuid, connected: false, disconnected_at }));
     });
 
     socket.on('messages', (roomID: number, messages: Message[]) => {

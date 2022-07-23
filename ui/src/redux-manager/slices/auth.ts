@@ -23,9 +23,18 @@ export default createSlice({
   reducers: {
     login: (state, action: StoreAction<{ token: string; user: User }>) => {
       const { user, token } = action.payload;
-      return { ...state, user, token, loading: false, authorized: true };
+      state.user = user;
+      state.token = token;
+      state.loading = false;
+      state.authorized = true;
     },
-    logout: state => ({ ...state, token: null, user: null, authorized: false, loading: false, error: undefined }),
+    logout: state => {
+      state.token = null;
+      state.user = null;
+      state.authorized = false;
+      state.loading = false;
+      state.error = undefined;
+    },
     runLoading: state => ({ ...state, loading: true, error: undefined }),
     catchError: (state, action: StoreAction<string>) => ({ ...state, loading: false, error: action.payload }),
     reset: state => ({ ...state, loading: false, error: undefined, userAvailable: undefined }),
