@@ -8,7 +8,11 @@ import { MESSAGES_LIMIT } from 'utils';
 import moment from 'moment';
 
 const MessageHistory = () => {
-  const { loading, full, messages } = useStore(state => state.messenger.chat);
+  const { loading, full, roomID } = useStore(state => state.messenger.chat);
+  const messages = useStore(state => {
+    const room = state.messenger.rooms?.find(room => room.id === roomID);
+    return room?.messages || [];
+  });
   const myUuid = useStore(state => state.auth.user?.uuid);
   const { ref, inView } = useInView();
 

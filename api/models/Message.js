@@ -14,11 +14,6 @@ const Message = db => {
       as: 'creator',
       foreignKey: { name: 'from', allowNull: false, unique: false },
     });
-
-    Model.belongsTo(models.User, {
-      as: 'receiver',
-      foreignKey: { name: 'to', allowNull: false, unique: false },
-    });
   };
 
   return Model;

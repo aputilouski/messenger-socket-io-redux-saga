@@ -17,10 +17,14 @@ const db = new Sequelize(env.postgres_db, env.postgres_user, env.postgres_user_p
 });
 
 const User = require('./User')(db);
+const Room = require('./Room')(db);
+const UserRoom = require('./UserRoom')(db);
 const Message = require('./Message')(db);
 
 const models = {
   User,
+  Room,
+  UserRoom,
   Message,
 };
 

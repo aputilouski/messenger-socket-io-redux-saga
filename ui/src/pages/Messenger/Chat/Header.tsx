@@ -2,22 +2,24 @@ import { useStore } from 'redux-manager';
 import moment from 'moment';
 
 const Header = () => {
-  const roomID = useStore(state => state.messenger.chat.room);
+  const roomID = useStore(state => state.messenger.chat.roomID);
   const rooms = useStore(state => state.messenger.rooms);
 
   if (!roomID) return null;
   else {
-    const room = rooms?.find(room => room.uuid === roomID);
+    const room = rooms?.find(room => room.id === roomID);
     if (!room) return null;
-    const lastSeen = room.connected //
+    const user = room.users[0];
+    if (!user) return null;
+    const lastSeen = user.connected //
       ? 'online'
-      : room.disconnected_at
-      ? 'last seen ' + moment(room.disconnected_at).format('MM.DD.YYYY H:mm')
+      : user.disconnected_at
+      ? 'last seen ' + moment(user.disconnected_at).format('MM.DD.YYYY H:mm')
       : null;
 
     return roomID ? (
       <div className="p-1.5 text-center w-full bg-white">
-        {room.name}
+        {user.name}
         {lastSeen && ` - ${lastSeen}`}
       </div>
     ) : null;

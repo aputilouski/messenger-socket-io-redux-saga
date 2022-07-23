@@ -23,14 +23,18 @@ const Rooms = () => {
       </div>
       <div className="grow p-2 flex flex-col gap-2.5">
         {rooms ? (
-          rooms.map(room => (
-            <RoomCard //
-              key={room.uuid}
-              onClick={() => selectRoom(room)}
-              name={room.name}
-              connected={room.connected}
-            />
-          ))
+          rooms.map(room => {
+            const user = room.users[0];
+            if (!user) return null;
+            return (
+              <RoomCard //
+                key={room.id}
+                onClick={() => selectRoom(room.id)}
+                name={user.name}
+                connected={user.connected}
+              />
+            );
+          })
         ) : (
           <div className="h-full w-full flex justify-center items-center">
             <CircularProgress />

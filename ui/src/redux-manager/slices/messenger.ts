@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { StoreAction } from '../actions';
+import { MESSAGES_LIMIT } from 'utils';
 
-type MessengerSlice = {
-  rooms: UserRoom[] | undefined;
+export type MessengerSlice = {
+  rooms: Room[] | undefined;
   chat: {
     loading: boolean;
     full: boolean;
-    messages: Message[] | undefined;
-    room: string | undefined;
+    roomID: number | undefined;
   };
 };
 
@@ -19,40 +19,40 @@ export default createSlice({
       loading: false,
       full: false,
       messages: undefined,
-      room: undefined,
+      roomID: undefined,
     },
   } as MessengerSlice,
   reducers: {
-    setRooms: (state, action: StoreAction<UserRoom[]>) => {
+    setRooms: (state, action: StoreAction<Room[]>) => {
       state.rooms = action.payload;
     },
     userConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
       const { uuid, connected, disconnected_at } = action.payload;
-      const room = state.rooms?.find(room => room.uuid === uuid);
-      if (room) {
-        room.connected = connected;
-        if (disconnected_at) room.disconnected_at = disconnected_at;
-      }
+      // const room = state.rooms?.find(room => room.uuid === uuid);
+      // if (room) {
+      //   room.connected = connected;
+      //   if (disconnected_at) room.disconnected_at = disconnected_at;
+      // }
     },
-    selectRoom: (state, action: StoreAction<string>) => {
+    selectRoom: (state, action: StoreAction<number>) => {
       state.chat.loading = true;
       state.chat.full = false;
-      state.chat.room = action.payload;
+      state.chat.roomID = action.payload;
     },
-    setChat: (state, action: StoreAction<{ room: string; messages: Message[] }>) => {
-      const { room, messages } = action.payload;
-      state.chat.full = false;
-      state.chat.room = room;
-      state.chat.messages = Object.assign([], messages);
-    },
-    setChatMessages: function (state, action: StoreAction<{ messages: Message[]; full: boolean }>) {
-      const { messages, full } = action.payload;
-      state.chat.full = full;
+    pushRoomMessages: function (state, action: StoreAction<{ roomID: number; messages: Message[] }>) {
+      const { roomID, messages } = action.payload;
+      state.chat.full = messages.length !== MESSAGES_LIMIT;
       state.chat.loading = false;
-      state.chat.messages = Object.assign([], messages);
+      const room = state.rooms?.find(room => room.id === roomID);
+      if (room) {
+        room.initialized = true;
+        room.messages = room.messages.concat(messages);
+      }
     },
-    pushChatMessage: (state, action: StoreAction<Message>) => {
-      state.chat.messages = state.chat.messages ? [action.payload, ...state.chat.messages] : [action.payload];
+    pushRoomMessage: (state, action: StoreAction<{ roomID: number; message: Message }>) => {
+      const { roomID, message } = action.payload;
+      const room = state.rooms?.find(room => room.id === roomID);
+      if (room) room.messages = [message, ...room.messages];
     },
   },
 });
