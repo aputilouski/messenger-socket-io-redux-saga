@@ -1,7 +1,15 @@
 import { Avatar, Paper, Badge, ButtonBase, styled } from '@mui/material';
 import { timestampFormat } from 'utils';
 
-const RoomCard = ({ name, connected, lastMessage, onClick }: { name: string; connected: boolean; lastMessage?: Message; onClick: () => void }) => (
+type RoomCardProps = {
+  name: string;
+  connected: boolean;
+  lastMessage?: Message;
+  unreadCount: number;
+  onClick: () => void;
+};
+
+const RoomCard = ({ name, connected, unreadCount, lastMessage, onClick }: RoomCardProps) => (
   <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }} onClick={onClick}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
@@ -20,7 +28,7 @@ const RoomCard = ({ name, connected, lastMessage, onClick }: { name: string; con
         </div>
         <div className="flex justify-between text-xs gap-4">
           <p className="grow text-gray-600 w-0 truncate">{lastMessage?.text}</p>
-          <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">1</p>
+          {Boolean(unreadCount) && <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">{unreadCount}</p>}
         </div>
       </div>
     </div>

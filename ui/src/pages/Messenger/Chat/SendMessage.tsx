@@ -5,11 +5,15 @@ import { sendMessage } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const SendMessage = () => {
-  const room = useStore(state => state.messenger.chat.roomID);
+  const roomID = useStore(state => state.messenger.chat.roomID);
   const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');
   const textFieldRef = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    textFieldRef.current?.focus();
+  }, [roomID]);
 
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     textRef.current = event.target.value;
@@ -35,7 +39,7 @@ const SendMessage = () => {
     [onSubmit]
   );
 
-  if (!room) return null;
+  if (!roomID) return null;
   return (
     <div className="flex gap-4 items-end p-2">
       <TextField //

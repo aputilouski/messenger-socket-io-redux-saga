@@ -25,6 +25,9 @@ export const updateUser = (payload: Userdata) => new Promise((resolve, reject) =
 export const SELECT_ROOM = 'CHAT/SELECT_ROOM';
 export const selectRoom = (payload: number) => store.dispatch({ type: SELECT_ROOM, payload });
 
+export const READ_MESSAGES = 'CHAT/READ_MESSAGES';
+export const readMessages = () => store.dispatch({ type: READ_MESSAGES });
+
 export const SEND_MESSAGE = 'CHAT/SEND_MESSAGE';
 export const sendMessage = (payload: string) => new Promise((resolve, reject) => store.dispatch({ type: SEND_MESSAGE, payload, resolve, reject }));
 

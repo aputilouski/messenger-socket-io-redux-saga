@@ -1,7 +1,7 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice, { MessengerSlice } from '../slices/messenger';
 import { RootState } from '../store';
@@ -11,16 +11,16 @@ function subscribe(socket: Socket) {
   return eventChannel(emit => {
     socket.off('connect_error');
 
-    socket.on('initialization', (rooms: Room[], subscribers: User[]) => {
-      emit(messengerSlice.actions.init({ rooms, subscribers }));
+    socket.on('initialization', (rooms: Room[], companions: Companion[]) => {
+      emit(messengerSlice.actions.init({ rooms, companions }));
     });
 
     socket.on('user:connected', (uuid: string) => {
-      emit(messengerSlice.actions.subscriberConnect({ uuid, connected: true }));
+      emit(messengerSlice.actions.companionConnect({ uuid, connected: true }));
     });
 
     socket.on('user:disconnected', (uuid: string, disconnected_at) => {
-      emit(messengerSlice.actions.subscriberConnect({ uuid, connected: false, disconnected_at }));
+      emit(messengerSlice.actions.companionConnect({ uuid, connected: false, disconnected_at }));
     });
 
     socket.on('messages', (roomID: number, messages: Message[]) => {
@@ -29,6 +29,10 @@ function subscribe(socket: Socket) {
 
     socket.on('message:created', (roomID: number, message: Message) => {
       emit(messengerSlice.actions.pushRoomMessage({ roomID, message }));
+    });
+
+    socket.on('messages:read', (uuid: string, last_read: any) => {
+      emit(messengerSlice.actions.setCompanionLastRead({ uuid, last_read }));
     });
 
     //   socket.on('disconnect', e => {
@@ -57,9 +61,10 @@ function* selectRoom(socket: Socket, action: StoreAction<number>) {
   const messenger: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
   if (messenger.chat.roomID === roomID) return;
   const room = messenger.rooms?.find(room => room.id === roomID);
-  if (!room || room.initialized || room.messages.length >= MESSAGES_LIMIT) return;
-  yield put(messengerSlice.actions.selectRoom(roomID));
-  socket.emit('messages', roomID, room.messages.length, MESSAGES_LIMIT);
+  if (!room || room.messages.length >= MESSAGES_LIMIT) return;
+  yield put(messengerSlice.actions.selectRoom({ roomID, loading: !room.initialized }));
+  if (room.unread_count !== 0) yield put(messengerSlice.actions.setRoomUnreadCount({ roomID }));
+  if (!room.initialized) socket.emit('messages', roomID, room.messages.length, MESSAGES_LIMIT);
 }
 
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
@@ -78,10 +83,16 @@ function* loadMore(socket: Socket) {
   socket.emit('messages', roomID, offset, MESSAGES_LIMIT);
 }
 
+function* readMessages(socket: Socket) {
+  const roomID: number = yield select(({ messenger }: RootState) => messenger.chat.roomID);
+  socket.emit('messages:read', roomID);
+}
+
 function* write(socket: Socket) {
   yield takeEvery(SELECT_ROOM, selectRoom, socket);
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
+  yield takeEvery(READ_MESSAGES, readMessages, socket);
 }
 
 const connect = (token: string) =>

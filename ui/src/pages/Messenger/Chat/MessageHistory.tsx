@@ -3,16 +3,15 @@ import { CircularProgress } from '@mui/material';
 import { positionValues, Scrollbars } from 'react-custom-scrollbars';
 import { useInView } from 'react-intersection-observer';
 import Message from './Message';
-import { useStore, loadMore } from 'redux-manager';
+import { useStore, loadMore, readMessages } from 'redux-manager';
 import { MESSAGES_LIMIT } from 'utils';
 import moment from 'moment';
 
 const MessageHistory = () => {
   const { loading, full, roomID } = useStore(state => state.messenger.chat);
-  const messages = useStore(state => {
-    const room = state.messenger.rooms?.find(room => room.id === roomID);
-    return room?.messages || [];
-  });
+  const room = useStore(state => state.messenger.rooms?.find(room => room.id === roomID));
+  const companion = useStore(state => state.messenger.companions.find(s => s.uuid === room?.companion));
+  const messages = room?.messages || [];
   const myUuid = useStore(state => state.auth.user?.uuid);
   const { ref, inView } = useInView();
 
@@ -32,6 +31,10 @@ const MessageHistory = () => {
     if (!scrollbarRef.current || (scrollModeRef.current && lastMessage?.from !== myUuid)) return;
     scrollbarRef.current.scrollToBottom();
   }, [myUuid, lastMessage, messages.length]);
+
+  React.useEffect(() => {
+    if (roomID && room?.initialized) readMessages();
+  }, [roomID, room, messages.length]);
 
   React.useEffect(() => {
     if (!inView || full) return;
@@ -54,14 +57,16 @@ const MessageHistory = () => {
               const showDate = newDate !== date;
               const Date = showDate ? <p className="text-center text-sm py-1">{date}</p> : null;
               date = newDate;
+              const my = message.from === myUuid;
+              const read = my && companion?.user_room.last_read ? message.created_at <= companion.user_room.last_read : undefined;
               return (
                 <React.Fragment key={message.id}>
                   {Date}
                   <Message //
                     ref={withMessageRef && index === messages.length - 5 ? ref : undefined}
-                    my={message.from === myUuid}
+                    my={my}
+                    read={read}
                     time={moment(message.created_at).format('HH:mm')}
-                    // read
                     container={containerRef.current}>
                     {message.text}
                   </Message>

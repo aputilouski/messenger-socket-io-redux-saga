@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
-const { User, Message, Room } = require('./models');
+const { User, Message, Room, UserRoom } = require('./models');
 const { getUserUuidByAccessToken } = require('./services/passport');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 const debug = require('debug')('api:io');
 
 module.exports = server => {
@@ -22,8 +22,8 @@ module.exports = server => {
     const uuid = socket.uuid;
     debug('user connected: ' + uuid);
 
-    const user = await User.findOne({
-      where: { uuid },
+    // retrieving user data and associated rooms
+    const user = await User.findByPk(uuid, {
       include: {
         model: Room,
         as: 'rooms',
@@ -60,8 +60,37 @@ module.exports = server => {
         subscribers.push(companion);
         room.dataValues.companion = companion.uuid;
         delete room.dataValues.users;
+        room.dataValues.unread_count = 0;
         return room;
       });
+
+    // get counter of unread messages
+    await User.findByPk(user.uuid, {
+      attributes: [],
+      include: {
+        model: Room,
+        as: 'rooms',
+        include: [
+          {
+            model: Message,
+            as: 'messages',
+            attributes: [],
+            where: {
+              from: { [Op.not]: uuid },
+              created_at: { [Op.gt]: Sequelize.col('rooms->user_room.last_read') },
+            },
+          },
+        ],
+        attributes: ['id', [Sequelize.fn('COUNT', Sequelize.col('rooms->messages.id')), 'unread_count']],
+      },
+      group: ['user.uuid', 'rooms.id', 'rooms->user_room.last_read', 'rooms->user_room.room_id', 'rooms->user_room.user_uuid'],
+    }).then(result => {
+      result.rooms.forEach(result => {
+        const room = subscriberRooms.find(room => room.id === result.id);
+        if (!room) return;
+        room.dataValues.unread_count = result.dataValues.unread_count;
+      });
+    });
 
     socket.emit('initialization', subscriberRooms, subscribers);
 
@@ -85,6 +114,17 @@ module.exports = server => {
           const to = room.users.map(user => user.uuid);
           io.to(to).emit('message:created', room_id, message);
         });
+      });
+    });
+
+    socket.on('messages:read', room_id => {
+      UserRoom.findAll({ where: { room_id } }).then(records => {
+        const userRoom = records.find(record => record.user_uuid === uuid);
+        if (!userRoom) return;
+        userRoom.last_read = new Date();
+        userRoom.save();
+        const array = records.map(r => r.user_uuid).filter(user_uuid => user_uuid !== uuid);
+        socket.to(array).emit('messages:read', uuid, userRoom.last_read);
       });
     });
 

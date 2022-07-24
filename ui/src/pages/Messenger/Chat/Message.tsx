@@ -31,7 +31,7 @@ const Message = React.forwardRef<HTMLDivElement, MessageProps>(
         <p className="whitespace-pre-line text-white">{children}</p>
         <p className="text-xs text-white relative top-1 -right-1.5 flex justify-end align-center gap-1.5">
           <span>{time}</span>
-          {!my && (read ? <StyledDoneAllRoundedIcon /> : <StyledDoneRoundedIcon />)}
+          {my && (read ? <StyledDoneAllRoundedIcon /> : <StyledDoneRoundedIcon />)}
         </p>
       </Paper>
     </Slide>

@@ -4,12 +4,12 @@ import { timestampFormat } from 'utils';
 const Header = () => {
   const roomID = useStore(state => state.messenger.chat.roomID);
   const rooms = useStore(state => state.messenger.rooms);
-  const subscribers = useStore(state => state.messenger.subscribers);
+  const companions = useStore(state => state.messenger.companions);
   if (!roomID) return null;
   else {
     const room = rooms?.find(room => room.id === roomID);
     if (!room) return null;
-    const companion = subscribers.find(user => user.uuid === room.companion);
+    const companion = companions.find(user => user.uuid === room.companion);
     if (!companion) return null;
     const lastSeen = companion.connected //
       ? 'online'
