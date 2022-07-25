@@ -9,11 +9,13 @@ declare global {
     uuid: string;
     name: string;
     username: string;
-    connected: boolean;
-    disconnected_at?: string;
   };
 
-  type Companion = User & { user_room: { last_read: string | null } };
+  type Companion = User & {
+    connected: boolean;
+    disconnected_at?: string;
+    user_room: { last_read: string | null };
+  };
 
   type Message = {
     id: string;

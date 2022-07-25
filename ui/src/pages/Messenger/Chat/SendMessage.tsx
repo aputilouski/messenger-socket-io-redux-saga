@@ -6,6 +6,7 @@ import { useStore } from 'redux-manager';
 
 const SendMessage = () => {
   const roomID = useStore(state => state.messenger.chat.roomID);
+  const companionID = useStore(state => state.messenger.search?.companionID);
   const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');
@@ -39,7 +40,7 @@ const SendMessage = () => {
     [onSubmit]
   );
 
-  if (!roomID) return null;
+  if ((roomID && companionID) || (!roomID && !companionID)) return null;
   return (
     <div className="flex gap-4 items-end p-2">
       <TextField //

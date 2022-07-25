@@ -33,3 +33,9 @@ export const sendMessage = (payload: string) => new Promise((resolve, reject) =>
 
 export const LOAD_MORE = 'CHAT/LOAD_MORE';
 export const loadMore = () => new Promise((resolve, reject) => store.dispatch({ type: LOAD_MORE, resolve, reject }));
+
+export const SEARCH = 'CHAT/SEARCH';
+export const search = (payload: string) => store.dispatch({ type: SEARCH, payload });
+
+export const SELECT_COMPANION = 'CHAT/SELECT_COMPANION';
+export const selectCompanion = (payload: string) => store.dispatch({ type: SELECT_COMPANION, payload });

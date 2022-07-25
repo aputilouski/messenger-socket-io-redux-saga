@@ -1,7 +1,7 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice, { MessengerSlice } from '../slices/messenger';
 import { RootState } from '../store';
@@ -33,6 +33,17 @@ function subscribe(socket: Socket) {
 
     socket.on('messages:read', (uuid: string, last_read: any) => {
       emit(messengerSlice.actions.setCompanionLastRead({ uuid, last_read }));
+    });
+
+    socket.on('search', (result?: { rows: User[]; count: number }) => {
+      if (result) emit(messengerSlice.actions.setSearchResult(result.rows));
+      else emit(messengerSlice.actions.clearSearch());
+    });
+
+    socket.on('room:new', (room: Room, companion: Companion) => {
+      emit(messengerSlice.actions.pushRoom({ room, companion }));
+      emit(messengerSlice.actions.clearSearch());
+      emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
     });
 
     //   socket.on('disconnect', e => {
@@ -69,8 +80,9 @@ function* selectRoom(socket: Socket, action: StoreAction<number>) {
 
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
-  const room_id: number = yield select(({ messenger }: RootState) => messenger.chat.roomID);
-  socket.emit('message:create', { text: payload, room_id });
+  const { chat, search }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
+  if (search?.companionID) socket.emit('room:new', search.companionID, payload);
+  else socket.emit('message:create', { text: payload, room_id: chat.roomID });
   resolve();
 }
 
@@ -88,11 +100,37 @@ function* readMessages(socket: Socket) {
   socket.emit('messages:read', roomID);
 }
 
+function* search(socket: Socket, action: StoreAction<string>) {
+  const text = action.payload;
+  if (!text) yield put(messengerSlice.actions.clearSearch());
+  else {
+    socket.emit('search', text);
+    const { rooms, companions }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
+    if (rooms) {
+      const result: Room[] = rooms.filter(room => {
+        const companion = companions.find(user => user.uuid === room.companion);
+        if (!companion) return false;
+        const words = companion.name.split(' ').filter(w => Boolean(w));
+        words.unshift(companion.username);
+        words.push(companion.name);
+        return words.some(w => w.startsWith(text));
+      });
+      yield put(messengerSlice.actions.setSearchRooms(result));
+    }
+  }
+}
+
+function* selectCompanion(socket: Socket, action: StoreAction<string>) {
+  yield put(messengerSlice.actions.selectCompanion(action.payload));
+}
+
 function* write(socket: Socket) {
   yield takeEvery(SELECT_ROOM, selectRoom, socket);
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
   yield takeEvery(READ_MESSAGES, readMessages, socket);
+  yield takeEvery(SEARCH, search, socket);
+  yield takeEvery(SELECT_COMPANION, selectCompanion, socket);
 }
 
 const connect = (token: string) =>

@@ -3,13 +3,14 @@ import { timestampFormat } from 'utils';
 
 type RoomCardProps = {
   name: string;
-  connected: boolean;
+  connected?: boolean;
   lastMessage?: Message;
-  unreadCount: number;
+  unreadCount?: number;
+  username?: string;
   onClick: () => void;
 };
 
-const RoomCard = ({ name, connected, unreadCount, lastMessage, onClick }: RoomCardProps) => (
+const RoomCard = ({ name, connected, unreadCount, lastMessage, username, onClick }: RoomCardProps) => (
   <ButtonBase component={Paper} elevation={4} sx={{ borderRadius: 1 }} onClick={onClick}>
     <div className="flex gap-4 w-full py-2.5 px-3.5">
       <div className="self-center">
@@ -27,7 +28,7 @@ const RoomCard = ({ name, connected, unreadCount, lastMessage, onClick }: RoomCa
           <p className="text-xs text-gray-600">{lastMessage && timestampFormat(lastMessage.created_at)}</p>
         </div>
         <div className="flex justify-between text-xs gap-4">
-          <p className="grow text-gray-600 w-0 truncate">{lastMessage?.text}</p>
+          <p className="grow text-gray-600 w-0 truncate">{username ? '@' + username : lastMessage?.text}</p>
           {Boolean(unreadCount) && <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">{unreadCount}</p>}
         </div>
       </div>

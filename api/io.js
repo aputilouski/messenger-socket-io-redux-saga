@@ -1,8 +1,8 @@
 const { Server } = require('socket.io');
 const { User, Message, Room, UserRoom } = require('./models');
 const { getUserUuidByAccessToken } = require('./services/passport');
-const { Op, Sequelize } = require('sequelize');
 const debug = require('debug')('api:io');
+const { Op } = require('sequelize');
 
 module.exports = server => {
   const io = new Server(server);
@@ -10,8 +10,9 @@ module.exports = server => {
   io.use(async (socket, next) => {
     try {
       const uuid = getUserUuidByAccessToken(socket.handshake.auth.token);
-      if (!uuid) return next(new Error('auth error'));
-      socket.uuid = uuid;
+      const user = await User.findByPk(uuid);
+      if (!user) return next(new Error('auth error'));
+      socket.user = user;
       next();
     } catch (error) {
       return next(new Error('auth error'));
@@ -19,80 +20,38 @@ module.exports = server => {
   });
 
   io.on('connection', async socket => {
-    const uuid = socket.uuid;
+    const uuid = socket.user.uuid;
+    const user = socket.user;
     debug('user connected: ' + uuid);
-
-    // retrieving user data and associated rooms
-    const user = await User.findByPk(uuid, {
-      include: {
-        model: Room,
-        as: 'rooms',
-        include: [
-          {
-            model: User,
-            as: 'users',
-            attributes: User.publicAttributes,
-            where: { uuid: { [Op.not]: uuid } },
-            required: false,
-          },
-          {
-            model: Message,
-            as: 'messages',
-            separate: true,
-            limit: 1,
-            order: [['created_at', 'DESC']],
-          },
-        ],
-      },
-    });
-    if (!user) new Error('auth error');
 
     user.connected = true;
     user.save();
 
     socket.join(uuid);
 
-    const subscribers = [];
-    const subscriberRooms = user.rooms
-      .filter(room => room.users.length === 1)
-      .map(room => {
-        const companion = room.users[0];
-        subscribers.push(companion);
-        room.dataValues.companion = companion.uuid;
-        delete room.dataValues.users;
-        room.dataValues.unread_count = 0;
-        return room;
-      });
+    const companions = [];
+    const myRooms = await Promise.all([User.loadAssociatedRooms(uuid), User.loadUnreadMessagesCounter(uuid)]).then(([userAssociatedRoomsResult, unreadMessagesCounterResult]) => {
+      const companionRooms = userAssociatedRoomsResult.rooms
+        .filter(room => room.users.length === 1)
+        .map(room => {
+          const companion = room.users[0];
+          companions.push(companion);
+          room.dataValues.companion = companion.uuid;
+          delete room.dataValues.users;
+          room.dataValues.unread_count = 0;
+          return room;
+        });
 
-    // get counter of unread messages
-    await User.findByPk(user.uuid, {
-      attributes: [],
-      include: {
-        model: Room,
-        as: 'rooms',
-        include: [
-          {
-            model: Message,
-            as: 'messages',
-            attributes: [],
-            where: {
-              from: { [Op.not]: uuid },
-              created_at: { [Op.gt]: Sequelize.col('rooms->user_room.last_read') },
-            },
-          },
-        ],
-        attributes: ['id', [Sequelize.fn('COUNT', Sequelize.col('rooms->messages.id')), 'unread_count']],
-      },
-      group: ['user.uuid', 'rooms.id', 'rooms->user_room.last_read', 'rooms->user_room.room_id', 'rooms->user_room.user_uuid'],
-    }).then(result => {
-      result.rooms.forEach(result => {
-        const room = subscriberRooms.find(room => room.id === result.id);
+      unreadMessagesCounterResult.rooms.forEach(result => {
+        const room = companionRooms.find(room => room.id === result.id);
         if (!room) return;
         room.dataValues.unread_count = result.dataValues.unread_count;
       });
-    });
 
-    socket.emit('initialization', subscriberRooms, subscribers);
+      socket.emit('initialization', companionRooms, companions);
+
+      return companionRooms.map(room => room.id);
+    });
 
     socket.on('messages', (room_id, offset = 0, limit = 25) => {
       // console.log(room_id, offset, limit);
@@ -128,7 +87,45 @@ module.exports = server => {
       });
     });
 
-    socket.to(subscribers.map(user => user.uuid)).emit('user:connected', uuid);
+    socket.on('search', text => {
+      const words = typeof text === 'string' ? text.split(' ').filter(w => Boolean(w)) : undefined;
+      if (!words || !words.length) socket.emit('search');
+
+      const patterns = words.map(word => word + '%');
+      const where = {
+        uuid: { [Op.not]: [...companions.map(c => c.uuid), uuid] },
+        [Op.or]: {
+          name: { [Op.iLike]: { [Op.any]: patterns } },
+          username: { [Op.iLike]: { [Op.any]: patterns } },
+        },
+      };
+
+      User.findAndCountAll({
+        attributes: User.userAttributes,
+        where,
+        order: [['created_at', 'DESC']],
+        // limit,
+        // offset: (page - 1) * limit,
+      }).then(result => {
+        socket.emit('search', result);
+      });
+    });
+
+    socket.on('room:new', async (_uuid, text) => {
+      const companion = await User.findByPk(_uuid, { attributes: User.companionAttributes });
+      if (!companion) throw new Error();
+      const room = await Room.create();
+      const roomUsers = await room.addUsers([_uuid, uuid]);
+      companion.dataValues.user_room = roomUsers.find(r => r.user_uuid === companion.uuid);
+      if (!companion.dataValues.user_room) throw new Error();
+      room.dataValues.companion = companion.uuid;
+      room.dataValues.unread_count = 0;
+      const message = await Message.create({ text, room_id: room.id, from: uuid });
+      room.dataValues.messages = [message];
+      socket.emit('room:new', room, companion);
+    });
+
+    socket.to(companions.map(user => user.uuid)).emit('user:connected', uuid);
 
     socket.on('disconnect', () => {
       debug('user disconnected: ' + uuid);
@@ -137,7 +134,7 @@ module.exports = server => {
       user.disconnected_at = new Date();
       user.save();
 
-      socket.to(subscribers.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
+      socket.to(companions.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
     });
   });
 };

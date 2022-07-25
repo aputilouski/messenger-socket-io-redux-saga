@@ -9,7 +9,7 @@ const Header = () => {
   const { user, loading, userAvailable, error } = useStore(state => state.auth);
   const [open, setOpen] = React.useState<boolean>(false);
   const [userdata, setUserdata] = React.useState<Userdata>({ name: '', username: '' });
-  const [errors, setErrors] = React.useState<Partial<User>>({});
+  const [errors, setErrors] = React.useState<Partial<Userdata>>({});
 
   React.useEffect(() => {
     if (!user || open) return;
@@ -18,7 +18,7 @@ const Header = () => {
   }, [user, open]);
 
   const timerRef = React.useRef<NodeJS.Timeout>();
-  const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof User }>) => {
+  const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof Userdata }>) => {
     const { name, value } = event.target;
     if (name === 'username' && value.trim()) {
       timerRef.current && clearTimeout(timerRef.current);
