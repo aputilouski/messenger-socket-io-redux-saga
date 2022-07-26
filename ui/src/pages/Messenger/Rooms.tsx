@@ -1,12 +1,22 @@
+import React from 'react';
 import { CircularProgress } from '@mui/material';
 import RoomCard from './RoomCard';
-import { selectRoom, selectCompanion } from 'redux-manager';
+import { selectRoom, selectCompanion, dropSelectedRoom } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const Rooms = () => {
   const rooms = useStore(state => state.messenger.rooms);
   const companions = useStore(state => state.messenger.companions);
   const search = useStore(state => state.messenger.search);
+
+  React.useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) dropSelectedRoom();
+    };
+    document.addEventListener('keydown', listener, false);
+    return () => document.removeEventListener('keydown', listener);
+  }, []);
+
   return rooms ? (
     <>
       {(search?.rooms || rooms).map(room => {

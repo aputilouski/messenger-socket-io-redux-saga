@@ -1,7 +1,7 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, SELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, DROP_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice, { MessengerSlice } from '../slices/messenger';
 import { RootState } from '../store';
@@ -79,6 +79,10 @@ function* selectRoom(socket: Socket, action: StoreAction<number>) {
   if (!room.initialized) socket.emit('messages', roomID, room.messages.length, MESSAGES_LIMIT);
 }
 
+function* dropRoom(socket: Socket) {
+  yield put(messengerSlice.actions.dropRoom());
+}
+
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
   const { chat, search }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
@@ -127,6 +131,7 @@ function* selectCompanion(socket: Socket, action: StoreAction<string>) {
 
 function* write(socket: Socket) {
   yield takeEvery(SELECT_ROOM, selectRoom, socket);
+  yield takeEvery(DROP_ROOM, dropRoom, socket);
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
   yield takeEvery(READ_MESSAGES, readMessages, socket);

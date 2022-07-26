@@ -39,3 +39,6 @@ export const search = (payload: string) => store.dispatch({ type: SEARCH, payloa
 
 export const SELECT_COMPANION = 'CHAT/SELECT_COMPANION';
 export const selectCompanion = (payload: string) => store.dispatch({ type: SELECT_COMPANION, payload });
+
+export const DROP_ROOM = 'CHAT/DROP_ROOM';
+export const dropSelectedRoom = () => store.dispatch({ type: DROP_ROOM });

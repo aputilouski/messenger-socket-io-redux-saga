@@ -86,6 +86,14 @@ export default createSlice({
       state.chat.roomID = roomID;
       if (state.search) state.search.companionID = undefined;
     },
+    dropRoom: state => {
+      state.chat = {
+        loading: false,
+        full: false,
+        roomID: undefined,
+      };
+      if (state.search) state.search.companionID = undefined;
+    },
     setRoomUnreadCount: (state, action: StoreAction<{ roomID: number; count?: number }>) => {
       const { roomID, count = 0 } = action.payload;
       const room = state.rooms?.find(room => room.id === roomID);
