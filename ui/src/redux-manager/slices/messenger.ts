@@ -19,6 +19,18 @@ export type MessengerSlice = {
     | undefined;
 };
 
+// sort by latest message (newest first)
+const sortRooms = (rooms: Room[] | undefined) => {
+  if (!rooms) return;
+  rooms.sort((a, b) => {
+    const messageA = a.messages[0].created_at;
+    const messageB = b.messages[0].created_at;
+    if ((!messageA && !messageB) || messageA === messageB) return 0;
+    else if (!messageA || !messageB) return messageA ? -1 : 1;
+    else return messageA > messageB ? -1 : 1;
+  });
+};
+
 export default createSlice({
   name: 'messenger',
   initialState: {
@@ -34,6 +46,7 @@ export default createSlice({
   reducers: {
     init: (state, action: StoreAction<{ rooms: Room[]; companions: Companion[] }>) => {
       const { rooms, companions } = action.payload;
+      sortRooms(rooms);
       state.rooms = rooms;
       state.companions = companions;
     },
@@ -94,6 +107,7 @@ export default createSlice({
       if (room) {
         room.messages = [message, ...room.messages];
         if (room.id !== state.chat.roomID) room.unread_count++;
+        sortRooms(state.rooms);
       }
     },
     setSearchResult: (state, action: StoreAction<User[]>) => {
