@@ -40,10 +40,11 @@ function subscribe(socket: Socket) {
       else emit(messengerSlice.actions.clearSearch());
     });
 
-    socket.on('room:new', (room: Room, companion: Companion) => {
+    socket.on('room:new', (room: Room, companion: Companion, autoSelect: boolean) => {
       emit(messengerSlice.actions.pushRoom({ room, companion }));
       emit(messengerSlice.actions.clearSearch());
-      emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
+      if (autoSelect) emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
+      socket.emit('subscribe', companion);
     });
 
     //   socket.on('disconnect', e => {

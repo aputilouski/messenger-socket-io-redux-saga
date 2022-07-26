@@ -53,7 +53,7 @@ router.post('/login', async (req, res) => {
     const passwordConfirmed = await user.confirmPassword(password);
     if (!passwordConfirmed) return res.status(403).json({ message: 'Incorrect credentials' });
 
-    res.json({ token: generateUserAccessToken(user), user: user.getPublicFields() });
+    res.json({ token: generateUserAccessToken(user), user: user.getPublicAttributes() });
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message || 'An error occurred while logging in');
@@ -76,7 +76,7 @@ router.post('/user', verifyUser, async (req, res) => {
     req.user.username = username;
     await req.user.save();
 
-    res.json({ user: req.user.getPublicFields(), message: 'User information updated successfully' });
+    res.json({ user: req.user.getPublicAttributes(), message: 'User information updated successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message || 'Some error occurred while updating the user');

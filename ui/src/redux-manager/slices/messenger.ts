@@ -39,6 +39,7 @@ export default createSlice({
     },
     pushRoom: (state, action: StoreAction<{ room: Room; companion: Companion }>) => {
       const { room, companion } = action.payload;
+      room.initialized = true;
       state.rooms = state.rooms ? [room, ...state.rooms] : [room];
       state.companions = [companion, ...state.companions];
     },

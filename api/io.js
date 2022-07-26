@@ -95,8 +95,8 @@ module.exports = server => {
       const where = {
         uuid: { [Op.not]: [...companions.map(c => c.uuid), uuid] },
         [Op.or]: {
-          name: { [Op.iLike]: { [Op.any]: patterns } },
           username: { [Op.iLike]: { [Op.any]: patterns } },
+          name: { [Op.substring]: words },
         },
       };
 
@@ -111,18 +111,28 @@ module.exports = server => {
       });
     });
 
-    socket.on('room:new', async (_uuid, text) => {
-      const companion = await User.findByPk(_uuid, { attributes: User.companionAttributes });
+    socket.on('room:new', async (to, text) => {
+      const companion = await User.findByPk(to, { attributes: User.companionAttributes });
       if (!companion) throw new Error();
       const room = await Room.create();
-      const roomUsers = await room.addUsers([_uuid, uuid]);
+      const roomUsers = await room.addUsers([to, uuid]);
       companion.dataValues.user_room = roomUsers.find(r => r.user_uuid === companion.uuid);
-      if (!companion.dataValues.user_room) throw new Error();
+      const thisUserRoom = roomUsers.find(r => r.user_uuid === uuid);
+      if (!companion.dataValues.user_room || !thisUserRoom) throw new Error();
       room.dataValues.companion = companion.uuid;
       room.dataValues.unread_count = 0;
       const message = await Message.create({ text, room_id: room.id, from: uuid });
       room.dataValues.messages = [message];
-      socket.emit('room:new', room, companion);
+      socket.emit('room:new', room, companion, true);
+      socket.to(to).emit(
+        'room:new', //
+        { ...room.get(), companion: uuid, unread_count: 1 },
+        { ...user.getPublicAttributes(User.companionAttributes), user_room: thisUserRoom }
+      );
+    });
+
+    socket.on('subscribe', companion => {
+      companions.push(companion);
     });
 
     socket.to(companions.map(user => user.uuid)).emit('user:connected', uuid);

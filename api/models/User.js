@@ -37,9 +37,9 @@ const User = db => {
   Model.companionAttributes = ['uuid', 'username', 'name', 'connected', 'disconnected_at'];
   Model.userAttributes = ['uuid', 'username', 'name'];
 
-  Model.prototype.getPublicFields = function () {
+  Model.prototype.getPublicAttributes = function (attributes = Model.userAttributes) {
     const user = {};
-    Model.companionAttributes.forEach(key => {
+    attributes.forEach(key => {
       user[key] = this[key];
     });
     return user;
