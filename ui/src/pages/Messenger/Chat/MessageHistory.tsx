@@ -6,6 +6,7 @@ import Message from './Message';
 import { useStore, loadMore, readMessages } from 'redux-manager';
 import { MESSAGES_LIMIT } from 'utils';
 import moment from 'moment';
+import { useWindowFocus } from 'hooks';
 
 const MessageHistory = () => {
   const { loading, full, roomID } = useStore(state => state.messenger.chat);
@@ -14,6 +15,7 @@ const MessageHistory = () => {
   const messages = room?.messages || [];
   const myUuid = useStore(state => state.auth.user?.uuid);
   const { ref, inView } = useInView();
+  const windowFocused = useWindowFocus();
 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -33,8 +35,8 @@ const MessageHistory = () => {
   }, [myUuid, lastMessage, messages.length]);
 
   React.useEffect(() => {
-    if (roomID && room?.initialized) readMessages();
-  }, [roomID, room, messages.length]);
+    if (roomID && room?.initialized && windowFocused) readMessages();
+  }, [roomID, room, messages.length, windowFocused]);
 
   React.useEffect(() => {
     if (!inView || full) return;
