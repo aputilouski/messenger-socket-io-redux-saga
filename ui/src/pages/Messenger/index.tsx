@@ -11,7 +11,7 @@ const Messenger = () => (
           <div className="p-2">
             <Search />
           </div>
-          <div className="grow p-2 flex flex-col gap-2.5">
+          <div className="grow">
             <Rooms />
           </div>
         </div>
