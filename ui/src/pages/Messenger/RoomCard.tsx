@@ -27,7 +27,7 @@ const RoomCard = ({ name, connected, unreadCount, lastMessage, username, onClick
           <p>{name}</p>
           <p className="text-xs text-gray-600">{lastMessage && timestampFormat(lastMessage.created_at)}</p>
         </div>
-        <div className="flex justify-between text-xs gap-4">
+        <div className="flex justify-between text-xs gap-4 h-5 items-center">
           <p className="grow text-gray-600 w-0 truncate">{username ? '@' + username : lastMessage?.text}</p>
           {Boolean(unreadCount) && <p className="font-bold text-white bg-secondary rounded-full p-1 leading-none w-5 text-center">{unreadCount}</p>}
         </div>
