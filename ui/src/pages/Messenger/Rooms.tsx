@@ -1,7 +1,7 @@
 import React from 'react';
 import { CircularProgress } from '@mui/material';
 import RoomCard from './RoomCard';
-import { selectRoom, selectCompanion, dropSelectedRoom } from 'redux-manager';
+import { selectRoom, selectCompanion, deselectRoom } from 'redux-manager';
 import { useStore } from 'redux-manager';
 
 const Rooms = () => {
@@ -11,7 +11,7 @@ const Rooms = () => {
 
   React.useEffect(() => {
     const listener = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) dropSelectedRoom();
+      if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) deselectRoom();
     };
     document.addEventListener('keydown', listener, false);
     return () => document.removeEventListener('keydown', listener);

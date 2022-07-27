@@ -1,11 +1,11 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, SELECT_ROOM, DROP_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, DESELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION, MESSAGE_PUSH } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice, { MessengerSlice } from '../slices/messenger';
 import { RootState } from '../store';
-import { notify, MESSAGES_LIMIT } from 'utils';
+import { notify, MESSAGES_LIMIT, shout } from 'utils';
 
 function subscribe(socket: Socket) {
   return eventChannel(emit => {
@@ -29,6 +29,7 @@ function subscribe(socket: Socket) {
 
     socket.on('message:created', (roomID: number, message: Message) => {
       emit(messengerSlice.actions.pushRoomMessage({ roomID, message }));
+      emit({ type: MESSAGE_PUSH, payload: { roomID, message } });
     });
 
     socket.on('messages:read', (uuid: string, last_read: any) => {
@@ -79,8 +80,8 @@ function* selectRoom(socket: Socket, action: StoreAction<number>) {
   if (!room.initialized) socket.emit('messages', roomID, room.messages.length, MESSAGES_LIMIT);
 }
 
-function* dropRoom(socket: Socket) {
-  yield put(messengerSlice.actions.dropRoom());
+function* deselectRoom(socket: Socket) {
+  yield put(messengerSlice.actions.deselectRoom());
 }
 
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
@@ -129,14 +130,26 @@ function* selectCompanion(socket: Socket, action: StoreAction<string>) {
   yield put(messengerSlice.actions.selectCompanion(action.payload));
 }
 
+function* messagePush(action: StoreAction<{ roomID: number; message: Message }>) {
+  const { roomID, message } = action.payload;
+  const messenger: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
+  if (roomID === messenger.chat.roomID) return;
+  const room = messenger.rooms?.find(room => room.id === roomID);
+  if (!room) return;
+  const companion = messenger.companions.find(c => c.uuid === room.companion);
+  if (!companion) return;
+  shout({ title: companion.name, text: message.text });
+}
+
 function* write(socket: Socket) {
   yield takeEvery(SELECT_ROOM, selectRoom, socket);
-  yield takeEvery(DROP_ROOM, dropRoom, socket);
+  yield takeEvery(DESELECT_ROOM, deselectRoom, socket);
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
   yield takeEvery(READ_MESSAGES, readMessages, socket);
   yield takeEvery(SEARCH, search, socket);
   yield takeEvery(SELECT_COMPANION, selectCompanion, socket);
+  yield takeEvery(MESSAGE_PUSH, messagePush);
 }
 
 const connect = (token: string) =>

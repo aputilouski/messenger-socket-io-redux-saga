@@ -86,7 +86,7 @@ export default createSlice({
       state.chat.roomID = roomID;
       if (state.search) state.search.companionID = undefined;
     },
-    dropRoom: state => {
+    deselectRoom: state => {
       state.chat = {
         loading: false,
         full: false,
