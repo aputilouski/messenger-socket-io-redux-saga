@@ -33,7 +33,7 @@ const SendMessage = () => {
 
   const onPressEnter = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== 'Enter') return;
+      if (event.key !== 'Enter' || event.shiftKey) return;
       event.preventDefault();
       onSubmit();
     },
