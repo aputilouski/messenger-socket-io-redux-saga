@@ -2,11 +2,10 @@ import React from 'react';
 import { TextField, Fab } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
 import { sendMessage } from 'redux-manager';
-import { useStore } from 'redux-manager';
+import { useChat } from './Provider';
 
 const SendMessage = () => {
-  const roomID = useStore(state => state.messenger.chat.roomID);
-  const companionID = useStore(state => state.messenger.search?.companionID);
+  const { contactID, roomID } = useChat();
   const [loading, setLoading] = React.useState(false);
 
   const textRef = React.useRef('');
@@ -14,7 +13,7 @@ const SendMessage = () => {
 
   React.useEffect(() => {
     textFieldRef.current?.focus();
-  }, [roomID]);
+  }, [roomID, contactID]);
 
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     textRef.current = event.target.value;
@@ -40,7 +39,7 @@ const SendMessage = () => {
     [onSubmit]
   );
 
-  if ((roomID && companionID) || (!roomID && !companionID)) return null;
+  if ((roomID && contactID) || (!roomID && !contactID)) return null;
   return (
     <div className="flex gap-4 items-end p-2">
       <TextField //

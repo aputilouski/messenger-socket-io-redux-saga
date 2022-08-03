@@ -1,7 +1,7 @@
 import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
-import { StoreAction, StoreActionPromise, SELECT_ROOM, DESELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_COMPANION, MESSAGE_PUSH, selectRoom as selectRoomAction } from '../actions';
+import { StoreAction, StoreActionPromise, SELECT_ROOM, DESELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_CONTACT, MESSAGE_PUSH, selectRoom as selectRoomAction } from '../actions';
 import authSlice from '../slices/auth';
 import messengerSlice, { MessengerSlice } from '../slices/messenger';
 import { RootState } from '../store';
@@ -11,16 +11,16 @@ function subscribe(socket: Socket) {
   return eventChannel(emit => {
     socket.off('connect_error');
 
-    socket.on('initialization', (rooms: Room[], companions: Companion[]) => {
-      emit(messengerSlice.actions.init({ rooms, companions }));
+    socket.on('initialization', (rooms: Room[], contacts: Contact[]) => {
+      emit(messengerSlice.actions.init({ rooms, contacts }));
     });
 
     socket.on('user:connected', (uuid: string) => {
-      emit(messengerSlice.actions.companionConnect({ uuid, connected: true }));
+      emit(messengerSlice.actions.contactConnect({ uuid, connected: true }));
     });
 
     socket.on('user:disconnected', (uuid: string, disconnected_at) => {
-      emit(messengerSlice.actions.companionConnect({ uuid, connected: false, disconnected_at }));
+      emit(messengerSlice.actions.contactConnect({ uuid, connected: false, disconnected_at }));
     });
 
     socket.on('messages', (roomID: number, messages: Message[]) => {
@@ -33,7 +33,7 @@ function subscribe(socket: Socket) {
     });
 
     socket.on('messages:read', (uuid: string, last_read: any) => {
-      emit(messengerSlice.actions.setCompanionLastRead({ uuid, last_read }));
+      emit(messengerSlice.actions.setContactLastRead({ uuid, last_read }));
     });
 
     socket.on('search', (result?: { rows: User[]; count: number }) => {
@@ -41,11 +41,11 @@ function subscribe(socket: Socket) {
       else emit(messengerSlice.actions.clearSearch());
     });
 
-    socket.on('room:new', (room: Room, companion: Companion, autoSelect: boolean) => {
-      emit(messengerSlice.actions.pushRoom({ room, companion }));
+    socket.on('room:new', (room: Room, contact: Contact, autoSelect: boolean) => {
+      emit(messengerSlice.actions.pushRoom({ room, contact: contact }));
       emit(messengerSlice.actions.clearSearch());
       if (autoSelect) emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
-      socket.emit('subscribe', companion);
+      socket.emit('subscribe', contact);
     });
 
     //   socket.on('disconnect', e => {
@@ -87,7 +87,7 @@ function* deselectRoom(socket: Socket) {
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
   const { chat, search }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
-  if (search?.companionID) socket.emit('room:new', search.companionID, payload);
+  if (search?.userID) socket.emit('room:new', search.userID, payload);
   else socket.emit('message:create', { text: payload, room_id: chat.roomID });
   resolve();
 }
@@ -111,14 +111,14 @@ function* search(socket: Socket, action: StoreAction<string>) {
   if (!text) yield put(messengerSlice.actions.clearSearch());
   else {
     socket.emit('search', text);
-    const { rooms, companions }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
+    const { rooms, contacts }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
     if (rooms) {
       const result: Room[] = rooms.filter(room => {
-        const companion = companions.find(user => user.uuid === room.companion);
-        if (!companion) return false;
-        const words = companion.name.split(' ').filter(w => Boolean(w));
-        words.unshift(companion.username);
-        words.push(companion.name);
+        const contact = contacts.find(user => user.uuid === room.contact);
+        if (!contact) return false;
+        const words = contact.name.split(' ').filter(w => Boolean(w));
+        words.unshift(contact.username);
+        words.push(contact.name);
         return words.some(w => w.startsWith(text));
       });
       yield put(messengerSlice.actions.setSearchRooms(result));
@@ -126,8 +126,8 @@ function* search(socket: Socket, action: StoreAction<string>) {
   }
 }
 
-function* selectCompanion(socket: Socket, action: StoreAction<string>) {
-  yield put(messengerSlice.actions.selectCompanion(action.payload));
+function* selectContact(socket: Socket, action: StoreAction<string>) {
+  yield put(messengerSlice.actions.selectContact(action.payload));
 }
 
 function* messagePush(action: StoreAction<{ roomID: number; message: Message }>) {
@@ -136,9 +136,9 @@ function* messagePush(action: StoreAction<{ roomID: number; message: Message }>)
   if (roomID === messenger.chat.roomID) return;
   const room = messenger.rooms?.find(room => room.id === roomID);
   if (!room) return;
-  const companion = messenger.companions.find(c => c.uuid === room.companion);
-  if (!companion) return;
-  shout({ title: companion.name, text: message.text }, () => selectRoomAction(roomID));
+  const contact = messenger.contacts.find(c => c.uuid === room.contact);
+  if (!contact) return;
+  shout({ title: contact.name, text: message.text }, () => selectRoomAction(roomID));
 }
 
 function* write(socket: Socket) {
@@ -148,7 +148,7 @@ function* write(socket: Socket) {
   yield takeEvery(LOAD_MORE, loadMore, socket);
   yield takeEvery(READ_MESSAGES, readMessages, socket);
   yield takeEvery(SEARCH, search, socket);
-  yield takeEvery(SELECT_COMPANION, selectCompanion, socket);
+  yield takeEvery(SELECT_CONTACT, selectContact, socket);
   yield takeEvery(MESSAGE_PUSH, messagePush);
 }
 

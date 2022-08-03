@@ -11,7 +11,7 @@ declare global {
     username: string;
   };
 
-  type Companion = User & {
+  type Contact = User & {
     connected: boolean;
     disconnected_at?: string;
     user_room: { last_read: string | null };
@@ -27,7 +27,7 @@ declare global {
 
   type Room = {
     id: number;
-    companion: string; // second user uuid
+    contact: string; // second user uuid
     messages: Message[];
     initialized?: boolean; // an indication that the messages have not yet been loaded
     unread_count: number;

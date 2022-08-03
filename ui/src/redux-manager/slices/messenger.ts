@@ -4,7 +4,7 @@ import { MESSAGES_LIMIT } from 'utils';
 
 export type MessengerSlice = {
   rooms: Room[] | undefined;
-  companions: Companion[];
+  contacts: Contact[];
   chat: {
     loading: boolean;
     full: boolean;
@@ -12,7 +12,7 @@ export type MessengerSlice = {
   };
   search:
     | {
-        companionID: string | undefined;
+        userID: string | undefined;
         result: User[];
         rooms: Room[];
       }
@@ -35,7 +35,7 @@ export default createSlice({
   name: 'messenger',
   initialState: {
     rooms: undefined,
-    companions: [],
+    contacts: [],
     chat: {
       loading: false,
       full: false,
@@ -44,21 +44,21 @@ export default createSlice({
     search: undefined,
   } as MessengerSlice,
   reducers: {
-    init: (state, action: StoreAction<{ rooms: Room[]; companions: Companion[] }>) => {
-      const { rooms, companions } = action.payload;
+    init: (state, action: StoreAction<{ rooms: Room[]; contacts: Contact[] }>) => {
+      const { rooms, contacts } = action.payload;
       sortRooms(rooms);
       state.rooms = rooms;
-      state.companions = companions;
+      state.contacts = contacts;
     },
-    pushRoom: (state, action: StoreAction<{ room: Room; companion: Companion }>) => {
-      const { room, companion } = action.payload;
+    pushRoom: (state, action: StoreAction<{ room: Room; contact: Contact }>) => {
+      const { room, contact } = action.payload;
       room.initialized = true;
       state.rooms = state.rooms ? [room, ...state.rooms] : [room];
-      state.companions = [companion, ...state.companions];
+      state.contacts = [contact, ...state.contacts];
     },
     quit: state => {
       state.rooms = undefined;
-      state.companions = [];
+      state.contacts = [];
       state.chat = {
         loading: false,
         full: false,
@@ -66,25 +66,25 @@ export default createSlice({
       };
       state.search = undefined;
     },
-    companionConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
+    contactConnect: (state, action: StoreAction<{ uuid: string; connected: boolean; disconnected_at?: string }>) => {
       const { uuid, connected, disconnected_at } = action.payload;
-      const user = state.companions.find(user => user.uuid === uuid);
+      const user = state.contacts.find(user => user.uuid === uuid);
       if (user) {
         user.connected = connected;
         if (disconnected_at) user.disconnected_at = disconnected_at;
       }
     },
-    setCompanionLastRead: (state, action: StoreAction<{ uuid: string; last_read: string }>) => {
+    setContactLastRead: (state, action: StoreAction<{ uuid: string; last_read: string }>) => {
       const { uuid, last_read } = action.payload;
-      const companion = state.companions.find(c => c.uuid === uuid);
-      if (companion) companion.user_room.last_read = last_read;
+      const contact = state.contacts.find(c => c.uuid === uuid);
+      if (contact) contact.user_room.last_read = last_read;
     },
     selectRoom: (state, action: StoreAction<{ roomID: number; loading: boolean }>) => {
       const { roomID, loading } = action.payload;
       state.chat.full = false;
       state.chat.loading = loading;
       state.chat.roomID = roomID;
-      if (state.search) state.search.companionID = undefined;
+      if (state.search) state.search.userID = undefined;
     },
     deselectRoom: state => {
       state.chat = {
@@ -92,7 +92,7 @@ export default createSlice({
         full: false,
         roomID: undefined,
       };
-      if (state.search) state.search.companionID = undefined;
+      if (state.search) state.search.userID = undefined;
     },
     setRoomUnreadCount: (state, action: StoreAction<{ roomID: number; count?: number }>) => {
       const { roomID, count = 0 } = action.payload;
@@ -120,14 +120,14 @@ export default createSlice({
     },
     setSearchResult: (state, action: StoreAction<User[]>) => {
       state.search = {
-        companionID: undefined,
+        userID: undefined,
         result: action.payload,
         rooms: state.search?.rooms || [],
       };
     },
     setSearchRooms: (state, action: StoreAction<Room[]>) => {
       state.search = {
-        companionID: state.search?.companionID,
+        userID: state.search?.userID,
         result: state.search?.result || [],
         rooms: action.payload,
       };
@@ -135,9 +135,9 @@ export default createSlice({
     clearSearch: state => {
       state.search = undefined;
     },
-    selectCompanion: (state, action: StoreAction<string>) => {
+    selectContact: (state, action: StoreAction<string>) => {
       state.chat.roomID = undefined;
-      if (state.search) state.search.companionID = action.payload;
+      if (state.search) state.search.userID = action.payload;
     },
   },
 });

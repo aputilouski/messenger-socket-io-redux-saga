@@ -1,12 +1,12 @@
 import React from 'react';
 import { CircularProgress } from '@mui/material';
 import RoomCard from './RoomCard';
-import { selectRoom, selectCompanion, deselectRoom, useStore } from 'redux-manager';
+import { selectRoom, selectContact, deselectRoom, useStore } from 'redux-manager';
 import { Scrollbars } from 'react-custom-scrollbars';
 
 const Rooms = () => {
   const rooms = useStore(state => state.messenger.rooms);
-  const companions = useStore(state => state.messenger.companions);
+  const contacts = useStore(state => state.messenger.contacts);
   const search = useStore(state => state.messenger.search);
 
   React.useEffect(() => {
@@ -22,14 +22,14 @@ const Rooms = () => {
       <Scrollbars>
         <div className="p-2 flex flex-col gap-2.5">
           {(search?.rooms || rooms).map(room => {
-            const companion = companions.find(user => user.uuid === room.companion);
-            if (!companion) return null;
+            const contact = contacts.find(user => user.uuid === room.contact);
+            if (!contact) return null;
             return (
               <RoomCard //
                 key={room.id}
                 onClick={() => selectRoom(room.id)}
-                name={companion.name}
-                connected={companion.connected}
+                name={contact.name}
+                connected={contact.connected}
                 lastMessage={room.messages[0]}
                 unreadCount={room.unread_count}
               />
@@ -42,7 +42,7 @@ const Rooms = () => {
               {search.result.map(user => (
                 <RoomCard //
                   key={user.uuid}
-                  onClick={() => selectCompanion(user.uuid)}
+                  onClick={() => selectContact(user.uuid)}
                   name={user.name}
                   username={user.username}
                 />

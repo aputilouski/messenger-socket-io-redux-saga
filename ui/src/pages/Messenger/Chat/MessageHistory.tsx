@@ -7,11 +7,11 @@ import { useStore, loadMore, readMessages } from 'redux-manager';
 import { MESSAGES_LIMIT } from 'utils';
 import moment from 'moment';
 import { useWindowFocus } from 'hooks';
+import { useChat } from './Provider';
 
 const MessageHistory = () => {
-  const { loading, full, roomID } = useStore(state => state.messenger.chat);
-  const room = useStore(state => state.messenger.rooms?.find(room => room.id === roomID));
-  const companion = useStore(state => state.messenger.companions.find(s => s.uuid === room?.companion));
+  const { contact, room, roomID } = useChat();
+  const { loading, full } = useStore(state => state.messenger.chat);
   const messages = room?.messages || [];
   const myUuid = useStore(state => state.auth.user?.uuid);
   const { ref, inView } = useInView();
@@ -60,7 +60,7 @@ const MessageHistory = () => {
               const Date = showDate ? <p className="text-center text-sm py-1">{date}</p> : null;
               date = newDate;
               const my = message.from === myUuid;
-              const read = my && companion?.user_room.last_read ? message.created_at <= companion.user_room.last_read : undefined;
+              const read = my && contact?.user_room.last_read ? message.created_at <= contact.user_room.last_read : undefined;
               return (
                 <React.Fragment key={message.id}>
                   {Date}

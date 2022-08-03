@@ -1,5 +1,3 @@
-const { DataTypes } = require('sequelize');
-
 const Room = db => {
   const Model = db.define('room', {}, { updatedAt: false });
 

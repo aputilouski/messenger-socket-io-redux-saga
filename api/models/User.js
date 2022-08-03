@@ -34,7 +34,7 @@ const User = db => {
     },
   });
 
-  Model.companionAttributes = ['uuid', 'username', 'name', 'connected', 'disconnected_at'];
+  Model.contactAttributes = ['uuid', 'username', 'name', 'connected', 'disconnected_at'];
   Model.userAttributes = ['uuid', 'username', 'name'];
 
   Model.prototype.getPublicAttributes = function (attributes = Model.userAttributes) {

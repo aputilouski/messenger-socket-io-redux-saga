@@ -29,28 +29,28 @@ module.exports = server => {
 
     socket.join(uuid);
 
-    const companions = [];
+    const contacts = [];
     const myRooms = await Promise.all([User.loadAssociatedRooms(uuid), User.loadUnreadMessagesCounter(uuid)]).then(([userAssociatedRoomsResult, unreadMessagesCounterResult]) => {
-      const companionRooms = userAssociatedRoomsResult.rooms
+      const contactRooms = userAssociatedRoomsResult.rooms
         .filter(room => room.users.length === 1)
         .map(room => {
-          const companion = room.users[0];
-          companions.push(companion);
-          room.dataValues.companion = companion.uuid;
+          const contact = room.users[0];
+          contacts.push(contact);
+          room.dataValues.contact = contact.uuid;
           delete room.dataValues.users;
           room.dataValues.unread_count = 0;
           return room;
         });
 
       unreadMessagesCounterResult.rooms.forEach(result => {
-        const room = companionRooms.find(room => room.id === result.id);
+        const room = contactRooms.find(room => room.id === result.id);
         if (!room) return;
         room.dataValues.unread_count = result.dataValues.unread_count;
       });
 
-      socket.emit('initialization', companionRooms, companions);
+      socket.emit('initialization', contactRooms, contacts);
 
-      return companionRooms.map(room => room.id);
+      return contactRooms.map(room => room.id);
     });
 
     socket.on('messages', (room_id, offset = 0, limit = 25) => {
@@ -93,7 +93,7 @@ module.exports = server => {
 
       const patterns = words.map(word => word + '%');
       const where = {
-        uuid: { [Op.not]: [...companions.map(c => c.uuid), uuid] },
+        uuid: { [Op.not]: [...contacts.map(c => c.uuid), uuid] },
         [Op.or]: {
           username: { [Op.iLike]: { [Op.any]: patterns } },
           name: { [Op.substring]: words },
@@ -112,30 +112,30 @@ module.exports = server => {
     });
 
     socket.on('room:new', async (to, text) => {
-      const companion = await User.findByPk(to, { attributes: User.companionAttributes });
-      if (!companion) throw new Error();
+      const contact = await User.findByPk(to, { attributes: User.contactAttributes });
+      if (!contact) throw new Error();
       const room = await Room.create();
       const roomUsers = await room.addUsers([to, uuid]);
-      companion.dataValues.user_room = roomUsers.find(r => r.user_uuid === companion.uuid);
+      contact.dataValues.user_room = roomUsers.find(r => r.user_uuid === contact.uuid);
       const thisUserRoom = roomUsers.find(r => r.user_uuid === uuid);
-      if (!companion.dataValues.user_room || !thisUserRoom) throw new Error();
-      room.dataValues.companion = companion.uuid;
+      if (!contact.dataValues.user_room || !thisUserRoom) throw new Error();
+      room.dataValues.contact = contact.uuid;
       room.dataValues.unread_count = 0;
       const message = await Message.create({ text, room_id: room.id, from: uuid });
       room.dataValues.messages = [message];
-      socket.emit('room:new', room, companion, true);
+      socket.emit('room:new', room, contact, true);
       socket.to(to).emit(
         'room:new', //
-        { ...room.get(), companion: uuid, unread_count: 1 },
-        { ...user.getPublicAttributes(User.companionAttributes), user_room: thisUserRoom }
+        { ...room.get(), contact: uuid, unread_count: 1 },
+        { ...user.getPublicAttributes(User.contactAttributes), user_room: thisUserRoom }
       );
     });
 
-    socket.on('subscribe', companion => {
-      companions.push(companion);
+    socket.on('subscribe', contact => {
+      contacts.push(contact);
     });
 
-    socket.to(companions.map(user => user.uuid)).emit('user:connected', uuid);
+    socket.to(contacts.map(user => user.uuid)).emit('user:connected', uuid);
 
     socket.on('disconnect', () => {
       debug('user disconnected: ' + uuid);
@@ -144,7 +144,7 @@ module.exports = server => {
       user.disconnected_at = new Date();
       user.save();
 
-      socket.to(companions.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
+      socket.to(contacts.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
     });
   });
 };

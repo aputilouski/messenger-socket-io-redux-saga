@@ -37,8 +37,8 @@ export const loadMore = () => new Promise((resolve, reject) => store.dispatch({ 
 export const SEARCH = 'CHAT/SEARCH';
 export const search = (payload: string) => store.dispatch({ type: SEARCH, payload });
 
-export const SELECT_COMPANION = 'CHAT/SELECT_COMPANION';
-export const selectCompanion = (payload: string) => store.dispatch({ type: SELECT_COMPANION, payload });
+export const SELECT_CONTACT = 'CHAT/SELECT_CONTACT';
+export const selectContact = (payload: string) => store.dispatch({ type: SELECT_CONTACT, payload });
 
 export const DESELECT_ROOM = 'CHAT/DESELECT_ROOM';
 export const deselectRoom = () => store.dispatch({ type: DESELECT_ROOM });
