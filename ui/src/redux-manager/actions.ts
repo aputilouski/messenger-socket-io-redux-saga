@@ -2,21 +2,20 @@ import { store } from './store';
 import authSlice from './slices/auth';
 
 export type StoreAction<T = any> = { type: string; payload: T };
-export type StoreActionPromise<T = any> = StoreAction<T> & { resolve: () => void; reject: () => void };
+export type StoreActionPromise<T = any, S = unknown, J = unknown> = StoreAction<T> & { resolve: (data?: S) => void; reject: (error?: J) => void };
 
 export const LOGIN = 'AUTH/LOGIN';
 export const LOGOUT = 'AUTH/LOGOUT';
 export type LoginCredentials = { username: string; password: string };
-export const login = (payload: LoginCredentials) => store.dispatch({ type: LOGIN, payload });
+export const login = (payload: LoginCredentials) => new Promise((resolve, reject) => store.dispatch({ type: LOGIN, payload, resolve, reject }));
 export const logout = () => store.dispatch({ type: LOGOUT });
 
 export const REGISTRATION = 'AUTH/REGISTRATION';
 export type RegistrationCredentials = LoginCredentials & { name: string; confirmPassword: string };
-export const register = (payload: RegistrationCredentials) => store.dispatch({ type: REGISTRATION, payload });
+export const register = (payload: RegistrationCredentials) => new Promise((resolve, reject) => store.dispatch({ type: REGISTRATION, payload, resolve, reject }));
 
 export const CHECK_USERNAME = 'AUTH/CHECK_USERNAME';
-export const checkUsername = (payload: string) => store.dispatch({ type: CHECK_USERNAME, payload });
-export const setUserAvailable = authSlice.actions.setUserAvailable;
+export const checkUsername = (payload: string) => new Promise<boolean>((resolve, reject) => store.dispatch({ type: CHECK_USERNAME, payload, resolve, reject }));
 
 export const USER_UPDATE = 'AUTH/USER_UPDATE';
 export type Userdata = Omit<User, 'uuid' | 'connected' | 'disconnected_at'>;

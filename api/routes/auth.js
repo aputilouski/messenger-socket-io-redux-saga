@@ -19,6 +19,9 @@ router.post('/register', async (req, res) => {
     const { error } = RegistrationCredentialsScheme.validate({ name, username, password });
     if (error?.details) return res.status(400).json({ message: error.details[0].message });
 
+    const user = await User.findOne({ where: { username } });
+    if (user) return res.status(400).json({ message: 'A user with the same username already exists' });
+
     const encryptedPassword = await User.encryptPassword(password);
     await User.create({ name, username, password: encryptedPassword });
 

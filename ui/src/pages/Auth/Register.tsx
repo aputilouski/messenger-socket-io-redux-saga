@@ -2,30 +2,29 @@ import React from 'react';
 import { TextField, Button, Paper, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Link } from 'react-router-dom';
-import { RegistrationCredentials, useStore, register, checkUsername } from 'redux-manager';
+import { RegistrationCredentials, register, checkUsername } from 'redux-manager';
 import { ValidateRegistrationCredentials } from 'utils/validation-scheme';
 
 const Register = () => {
-  const [state, setState] = React.useState<{ credentials: RegistrationCredentials; errors: Partial<RegistrationCredentials> }>({
-    credentials: { name: '', username: '', password: '', confirmPassword: '' },
-    errors: {},
-  });
+  const [credentials, setCredentials] = React.useState<RegistrationCredentials>({ name: '', username: '', password: '', confirmPassword: '' });
+  const [errors, setErrors] = React.useState<Partial<RegistrationCredentials>>({});
 
-  const { loading, error, userAvailable } = useStore(state => state.auth);
-  const userNotAvailable = userAvailable === false;
+  const [loading, setLoading] = React.useState(false);
+  const [responseError, setResponseError] = React.useState<string>();
 
-  const timerRef = React.useRef<NodeJS.Timeout>();
+  const [usernameAvailable, setUsernameAvailable] = React.useState<boolean>();
+
+  const usernameNotAvailable = usernameAvailable === false;
+
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof RegistrationCredentials }>) => {
     const { name, value } = event.target;
-    if (name === 'username' && value.trim()) {
-      timerRef.current && clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => checkUsername(value), 800);
-    }
-    setState(state => {
-      const credentials = { ...state.credentials, [name]: value };
-      const errors = state.errors;
-      if (errors[name]) delete errors[name];
-      return { ...state, credentials };
+    if (name === 'username' && value.trim()) checkUsername(value).then(setUsernameAvailable);
+    setCredentials(credentials => ({ ...credentials, [name]: value }));
+    setErrors(errors => {
+      if (errors[name]) {
+        delete errors[name];
+        return { ...errors };
+      } else return errors;
     });
   }, []);
 
@@ -33,60 +32,66 @@ const Register = () => {
     event.preventDefault();
     if (userNotAvailable) return;
     const { errors } = ValidateRegistrationCredentials(credentials);
-    if (errors) setState(state => ({ ...state, errors }));
-    else register(credentials);
+    if (errors) setErrors(errors);
+    else {
+      setResponseError(undefined);
+      setLoading(true);
+      register(credentials)
+        .catch(error => setResponseError(error))
+        .finally(() => setLoading(false));
+    }
   }, []);
 
   return (
     <div className="w-screen h-screen flex">
       <form //
-        onSubmit={event => onSubmit(event, state.credentials, userNotAvailable)}
+        onSubmit={event => onSubmit(event, credentials, usernameNotAvailable)}
         className="max-w-sm w-full m-auto">
         <Paper className="flex flex-col gap-3.5 p-4" elevation={5}>
           <h1 className="text-2xl mb-1.5">Registration</h1>
 
           <TextField //
-            value={state.credentials.username}
+            value={credentials.username}
             onChange={onChange}
             name="username"
             label="Username"
-            error={userNotAvailable || Boolean(state.errors.username)}
-            helperText={userNotAvailable ? 'Username is already in use' : state.errors.username}
-            color={userAvailable ? 'success' : undefined}
+            error={usernameNotAvailable || Boolean(errors.username)}
+            helperText={usernameNotAvailable ? 'Username is already in use' : errors.username}
+            color={usernameAvailable ? 'success' : undefined}
           />
 
           <TextField //
-            value={state.credentials.name}
+            value={credentials.name}
             onChange={onChange}
             name="name"
             label="Full Name"
-            error={Boolean(state.errors.name)}
-            helperText={state.errors.name}
+            error={Boolean(errors.name)}
+            helperText={errors.name}
           />
 
           <TextField //
-            value={state.credentials.password}
+            value={credentials.password}
             onChange={onChange}
             name="password"
             label="Password"
             type="password"
             autoComplete="off"
-            error={Boolean(state.errors.password)}
-            helperText={state.errors.password}
+            error={Boolean(errors.password)}
+            helperText={errors.password}
           />
 
           <TextField //
-            value={state.credentials.confirmPassword}
+            value={credentials.confirmPassword}
             onChange={onChange}
             name="confirmPassword"
             label="Confirm Password"
             type="password"
             autoComplete="off"
-            error={Boolean(state.errors.confirmPassword)}
-            helperText={state.errors.confirmPassword}
+            error={Boolean(errors.confirmPassword)}
+            helperText={errors.confirmPassword}
           />
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {responseError && <Alert severity="error">{responseError}</Alert>}
 
           <LoadingButton //
             loading={loading}

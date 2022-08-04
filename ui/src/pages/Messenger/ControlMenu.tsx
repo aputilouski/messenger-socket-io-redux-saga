@@ -1,26 +1,32 @@
 import React from 'react';
 import { Avatar, Button, IconButton, Dialog, DialogTitle, DialogContent, TextField, Alert } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useStore, logout, checkUsername, setUserAvailable, updateUser, Userdata } from 'redux-manager';
+import { useStore, logout, checkUsername, updateUser, Userdata } from 'redux-manager';
 import { LoadingButton } from '@mui/lab';
 import { ValidateProfile } from 'utils/validation-scheme';
 
 const Header = () => {
-  const { user, loading, userAvailable, error } = useStore(state => state.auth);
+  const { user } = useStore(state => state.auth);
   const [open, setOpen] = React.useState<boolean>(false);
   const [userdata, setUserdata] = React.useState<Userdata>({ name: '', username: '' });
   const [errors, setErrors] = React.useState<Partial<Userdata>>({});
+
+  const [loading, setLoading] = React.useState(false);
+  const [responseError, setResponseError] = React.useState<string>();
+
+  const [usernameAvailable, setUsernameAvailable] = React.useState<boolean>();
 
   React.useEffect(() => {
     if (!user || open) return;
     const { name, username } = user;
     setUserdata({ name, username });
-    setUserAvailable(undefined);
+    setUsernameAvailable(true);
+    setResponseError(undefined);
   }, [user, open]);
 
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof Userdata }>) => {
     const { name, value } = event.target;
-    if (name === 'username' && value.trim()) checkUsername(value);
+    if (name === 'username' && value.trim()) checkUsername(value).then(setUsernameAvailable);
     setUserdata(data => ({ ...data, [name]: value }));
     setErrors(errors => {
       if (errors[name]) {
@@ -35,10 +41,17 @@ const Header = () => {
     if (userNotAvailable) return;
     const { errors } = ValidateProfile(userdata);
     if (errors) setErrors(errors);
-    else updateUser(userdata).then(() => setOpen(false));
+    else {
+      setResponseError(undefined);
+      setLoading(true);
+      updateUser(userdata)
+        .then(() => setOpen(false))
+        .catch(error => setResponseError(error))
+        .finally(() => setLoading(false));
+    }
   }, []);
 
-  const userNotAvailable = userAvailable === false && user?.username !== userdata.username;
+  const userNotAvailable = usernameAvailable === false && user?.username !== userdata.username;
 
   return (
     <>
@@ -86,10 +99,10 @@ const Header = () => {
               label="Username"
               error={userNotAvailable || Boolean(errors.username)}
               helperText={userNotAvailable ? 'Username is already in use' : errors.username}
-              color={userAvailable ? 'success' : undefined}
+              color={usernameAvailable ? 'success' : undefined}
             />
 
-            {error && <Alert severity="error">{error}</Alert>}
+            {responseError && <Alert severity="error">{responseError}</Alert>}
 
             <LoadingButton //
               type="submit"
