@@ -1,5 +1,4 @@
 import { store } from './store';
-import authSlice from './slices/auth';
 
 export type StoreAction<T = any> = { type: string; payload: T };
 export type StoreActionPromise<T = any, S = unknown, J = unknown> = StoreAction<T> & { resolve: (data?: S) => void; reject: (error?: J) => void };

@@ -48,6 +48,10 @@ function subscribe(socket: Socket) {
       socket.emit('subscribe', contact);
     });
 
+    socket.on('error', (message: string) => {
+      notify.error(message);
+    });
+
     //   socket.on('disconnect', e => {
     //     // TODO: handle
     //   });

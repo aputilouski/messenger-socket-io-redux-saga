@@ -26,6 +26,8 @@ export default createSlice({
       state.user = null;
       state.authorized = false;
     },
-    setUser: (state, action: StoreAction<User>) => ({ ...state, user: action.payload, loading: false }),
+    setUser: (state, action: StoreAction<User>) => {
+      state.user = action.payload;
+    },
   },
 });
