@@ -45,7 +45,6 @@ function subscribe(socket: Socket) {
       emit(messengerSlice.actions.pushRoom({ room, contact: contact }));
       emit(messengerSlice.actions.clearSearch());
       if (autoSelect) emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
-      socket.emit('subscribe', contact);
     });
 
     socket.on('error', (message: string) => {

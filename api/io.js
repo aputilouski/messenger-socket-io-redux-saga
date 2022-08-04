@@ -25,35 +25,43 @@ module.exports = server => {
     debug('user connected: ' + uuid);
 
     user.connected = true;
-    user.save();
+    user.save().catch(error => {
+      console.log(error);
+      socket.emit('error', 'Oops. Something went wrong while connecting.');
+    });
 
     socket.join(uuid);
 
-    Promise.all([User.loadAssociatedRooms(uuid), User.loadUnreadMessagesCounter(uuid)]).then(([userAssociatedRoomsResult, unreadMessagesCounterResult]) => {
-      const contacts = [];
-      const contactRooms = userAssociatedRoomsResult.rooms
-        .filter(room => room.users.length === 1)
-        .map(room => {
-          const contact = room.users[0];
-          contacts.push(contact);
-          room.dataValues.contact = contact.uuid;
-          delete room.dataValues.users;
-          room.dataValues.unread_count = 0;
-          return room;
+    Promise.all([User.loadAssociatedRooms(uuid), User.loadUnreadMessagesCounter(uuid)])
+      .then(([userAssociatedRoomsResult, unreadMessagesCounterResult]) => {
+        const contacts = [];
+        const contactRooms = userAssociatedRoomsResult.rooms
+          .filter(room => room.users.length === 1)
+          .map(room => {
+            const contact = room.users[0];
+            contacts.push(contact);
+            room.dataValues.contact = contact.uuid;
+            delete room.dataValues.users;
+            room.dataValues.unread_count = 0;
+            return room;
+          });
+
+        unreadMessagesCounterResult.rooms.forEach(result => {
+          const room = contactRooms.find(room => room.id === result.id);
+          if (!room) return;
+          room.dataValues.unread_count = result.dataValues.unread_count;
         });
 
-      unreadMessagesCounterResult.rooms.forEach(result => {
-        const room = contactRooms.find(room => room.id === result.id);
-        if (!room) return;
-        room.dataValues.unread_count = result.dataValues.unread_count;
+        socket.to(contacts.map(user => user.uuid)).emit('user:connected', uuid);
+
+        socket.emit('initialization', contactRooms, contacts);
+
+        return contactRooms.map(room => room.id);
+      })
+      .catch(error => {
+        console.log(error);
+        socket.emit('error', 'Oops. Something went wrong during application initialization.');
       });
-
-      socket.to(contacts.map(user => user.uuid)).emit('user:connected', uuid);
-
-      socket.emit('initialization', contactRooms, contacts);
-
-      return contactRooms.map(room => room.id);
-    });
 
     socket.on('messages', (room_id, offset = 0, limit = 25) => {
       Message.findAll({
@@ -161,25 +169,25 @@ module.exports = server => {
       }
     });
 
-    // socket.on('subscribe', contact => {
-    //   contacts.push(contact);
-    // });
-
-    // socket.to(contacts.map(user => user.uuid)).emit('user:connected', uuid);
-
     socket.on('disconnect', () => {
-      try {
-        debug('user disconnected: ' + uuid);
+      debug('user disconnected: ' + uuid);
 
-        user.connected = false;
-        user.disconnected_at = new Date();
-        user.save();
-
-        // socket.to(contacts.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
-      } catch (error) {
+      user.connected = false;
+      user.disconnected_at = new Date();
+      user.save().catch(error => {
         console.log(error);
-        socket.emit('error', 'Oops. Something went wrong while disconnected.');
-      }
+        socket.emit('error', 'Oops. Something went wrong while disconnecting.');
+      });
+
+      User.loadAssociatedRooms(uuid)
+        .then(result => {
+          const contacts = result.rooms.filter(room => room.users.length === 1).map(room => room.users[0]);
+          socket.to(contacts.map(user => user.uuid)).emit('user:disconnected', uuid, user.disconnected_at);
+        })
+        .catch(error => {
+          console.log(error);
+          socket.emit('error', 'Oops. Something went wrong while disconnecting.');
+        });
     });
   });
 };
