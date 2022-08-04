@@ -38,8 +38,8 @@ const Rooms = () => {
           {search && (
             <>
               <p className="mt-3 text-xs text-gray-600 text-center">Global Search</p>
-              {search.result.length === 0 && <p className="mt-3 text-sm text-center">No results</p>}
-              {search.result.map(user => (
+              {search.result?.length === 0 && <p className="mt-3 text-sm text-center">No results</p>}
+              {search.result?.map(user => (
                 <RoomCard //
                   key={user.uuid}
                   onClick={() => selectContact(user.uuid)}

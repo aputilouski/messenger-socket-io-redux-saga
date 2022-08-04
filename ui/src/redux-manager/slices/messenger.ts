@@ -13,8 +13,8 @@ export type MessengerSlice = {
   search:
     | {
         userID: string | undefined;
-        result: User[];
-        rooms: Room[];
+        result?: User[];
+        rooms?: Room[];
       }
     | undefined;
 };
@@ -122,13 +122,13 @@ export default createSlice({
       state.search = {
         userID: undefined,
         result: action.payload,
-        rooms: state.search?.rooms || [],
+        rooms: state.search?.rooms,
       };
     },
     setSearchRooms: (state, action: StoreAction<Room[]>) => {
       state.search = {
         userID: state.search?.userID,
-        result: state.search?.result || [],
+        result: state.search?.result,
         rooms: action.payload,
       };
     },

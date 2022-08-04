@@ -1,16 +1,18 @@
 import React from 'react';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
-import { search } from 'redux-manager';
+import { search, useStore } from 'redux-manager';
 
 const Search = () => {
   const [text, setText] = React.useState('');
 
-  const timerRef = React.useRef<NodeJS.Timer>();
+  const clearSearchFlag = useStore(state => !state.messenger.search);
   React.useEffect(() => {
-    clearTimeout(timerRef.current);
-    if (text) timerRef.current = setTimeout(() => search(text), 1000);
-    else search(text);
+    if (clearSearchFlag) setText('');
+  }, [clearSearchFlag]);
+
+  React.useEffect(() => {
+    search(text);
   }, [text]);
 
   const ClearButton = React.useMemo(

@@ -19,7 +19,7 @@ export const ProvideChat = ({ children }: { children: JSX.Element }) => {
   const contactID = useStore(state => state.messenger.search?.userID);
   const contact: Contact | undefined = useStore(state => {
     if (contactID) {
-      const user = state.messenger.search?.result.find(c => c.uuid === contactID);
+      const user = state.messenger.search?.result?.find(c => c.uuid === contactID);
       if (!user) return;
       return { ...user, connected: false, disconnected_at: undefined, user_room: { last_read: null } };
     } else if (room) {

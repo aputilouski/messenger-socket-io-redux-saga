@@ -13,17 +13,14 @@ const Header = () => {
 
   React.useEffect(() => {
     if (!user || open) return;
-    setUserdata(user);
+    const { name, username } = user;
+    setUserdata({ name, username });
     setUserAvailable(undefined);
   }, [user, open]);
 
-  const timerRef = React.useRef<NodeJS.Timeout>();
   const onChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement & { name: keyof Userdata }>) => {
     const { name, value } = event.target;
-    if (name === 'username' && value.trim()) {
-      timerRef.current && clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => checkUsername(value), 800);
-    }
+    if (name === 'username' && value.trim()) checkUsername(value);
     setUserdata(data => ({ ...data, [name]: value }));
     setErrors(errors => {
       if (errors[name]) {

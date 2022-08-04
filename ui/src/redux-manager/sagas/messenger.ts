@@ -1,4 +1,4 @@
-import { call, take, put, select, fork, all, cancel, cancelled, takeEvery } from 'redux-saga/effects';
+import { call, take, put, select, fork, all, cancel, cancelled, delay, takeEvery, takeLatest } from 'redux-saga/effects';
 import { EventChannel, eventChannel, Task } from 'redux-saga';
 import { io, Socket } from 'socket.io-client';
 import { StoreAction, StoreActionPromise, SELECT_ROOM, DESELECT_ROOM, SEND_MESSAGE, LOAD_MORE, READ_MESSAGES, SEARCH, SELECT_CONTACT, MESSAGE_PUSH, selectRoom as selectRoomAction } from '../actions';
@@ -77,7 +77,7 @@ function* selectRoom(socket: Socket, action: StoreAction<number>) {
   if (!room) return;
   yield put(messengerSlice.actions.selectRoom({ roomID, loading: !room.initialized }));
   if (room.unread_count !== 0) yield put(messengerSlice.actions.setRoomUnreadCount({ roomID }));
-  if (!room.initialized) socket.emit('messages', roomID, room.messages.length, MESSAGES_LIMIT);
+  if (!room.initialized) yield call([socket, socket.emit], 'messages', roomID, room.messages.length, MESSAGES_LIMIT);
 }
 
 function* deselectRoom(socket: Socket) {
@@ -87,8 +87,8 @@ function* deselectRoom(socket: Socket) {
 function* sendMessage(socket: Socket, action: StoreActionPromise<string>) {
   const { payload, resolve } = action;
   const { chat, search }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
-  if (search?.userID) socket.emit('room:new', search.userID, payload);
-  else socket.emit('message:create', { text: payload, room_id: chat.roomID });
+  if (search?.userID) yield call([socket, socket.emit], 'room:new', search.userID, payload);
+  else yield call([socket, socket.emit], 'message:create', { text: payload, room_id: chat.roomID });
   resolve();
 }
 
@@ -98,19 +98,24 @@ function* loadMore(socket: Socket) {
   const room = messenger.rooms?.find(room => room.id === roomID);
   if (!room) return;
   const offset = room.messages.length;
-  socket.emit('messages', roomID, offset, MESSAGES_LIMIT);
+  yield call([socket, socket.emit], 'messages', roomID, offset, MESSAGES_LIMIT);
 }
 
 function* readMessages(socket: Socket) {
   const roomID: number = yield select(({ messenger }: RootState) => messenger.chat.roomID);
-  socket.emit('messages:read', roomID);
+  yield call([socket, socket.emit], 'messages:read', roomID);
+}
+
+function* serverSearch(socket: Socket, text: string) {
+  yield delay(800);
+  yield call([socket, socket.emit], 'search', text);
 }
 
 function* search(socket: Socket, action: StoreAction<string>) {
   const text = action.payload;
   if (!text) yield put(messengerSlice.actions.clearSearch());
   else {
-    socket.emit('search', text);
+    yield fork(serverSearch, socket, text);
     const { rooms, contacts }: MessengerSlice = yield select(({ messenger }: RootState) => messenger);
     if (rooms) {
       const result: Room[] = rooms.filter(room => {
@@ -147,7 +152,7 @@ function* write(socket: Socket) {
   yield takeEvery(SEND_MESSAGE, sendMessage, socket);
   yield takeEvery(LOAD_MORE, loadMore, socket);
   yield takeEvery(READ_MESSAGES, readMessages, socket);
-  yield takeEvery(SEARCH, search, socket);
+  yield takeLatest(SEARCH, search, socket);
   yield takeEvery(SELECT_CONTACT, selectContact, socket);
   yield takeEvery(MESSAGE_PUSH, messagePush);
 }

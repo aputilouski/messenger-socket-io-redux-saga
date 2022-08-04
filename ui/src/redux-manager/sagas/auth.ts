@@ -1,4 +1,5 @@
-import { call, put, select, takeEvery, takeLatest } from 'redux-saga/effects';
+import { call, put, select, cancel, take, takeEvery, takeLatest, delay } from 'redux-saga/effects';
+import { Task } from 'redux-saga';
 import authSlice, { AuthSlice } from '../slices/auth';
 import messengerSlice from '../slices/messenger';
 import api, { getErrorMessage, setAccessToken } from 'api';
@@ -14,12 +15,12 @@ function* loginWorker(action: StoreAction<LoginCredentials>) {
     yield put(authSlice.actions.login(response.data));
     yield put(replace('/channels'));
   } catch (error) {
-    console.error(error);
     yield put(authSlice.actions.catchError(getErrorMessage(error)));
+    throw error;
   }
 }
 
-function* logoutWorker() {
+function* logoutWorker(action: StoreAction) {
   yield put(authSlice.actions.logout());
   yield put(messengerSlice.actions.quit());
 }
@@ -45,6 +46,7 @@ function* registerWorker(action: StoreAction<RegistrationCredentials>) {
 
 function* checkUsernameWorker(action: StoreAction<string>) {
   try {
+    yield delay(800);
     const response: Awaited<ReturnType<typeof api.checkUsername>> = yield call(() => api.checkUsername(action.payload));
     yield put(authSlice.actions.setUserAvailable(response.data.available));
   } catch (error) {
@@ -66,11 +68,31 @@ function* userUpdateWorker(action: StoreActionPromise<User>) {
   }
 }
 
-export default function* authWatcher() {
-  yield takeEvery(LOGIN, loginWorker);
-  yield takeEvery(LOGOUT, logoutWorker);
+function* authWatcher() {
   yield takeEvery(REGISTRATION, registerWorker);
-  yield takeEvery(CHECK_USERNAME, checkUsernameWorker);
-  yield takeEvery(USER_UPDATE, userUpdateWorker);
+
+  yield takeLatest(CHECK_USERNAME, checkUsernameWorker);
+
   yield takeLatest(LOCATION_CHANGE, resetWorker);
+
+  while (true) {
+    const loginAction: StoreAction<LoginCredentials> = yield take(LOGIN);
+    yield call(loginWorker, loginAction);
+
+    const updateUserTask: Task = yield takeEvery(USER_UPDATE, userUpdateWorker);
+
+    const logoutAction: StoreAction = yield take(LOGOUT);
+    yield cancel([updateUserTask]);
+    yield call(logoutWorker, logoutAction);
+  }
+}
+
+export default function* main() {
+  while (true) {
+    try {
+      yield call(authWatcher);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
