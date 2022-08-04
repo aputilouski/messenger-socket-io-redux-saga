@@ -8,11 +8,16 @@ import { RootState } from '../store';
 import { notify, MESSAGES_LIMIT, shout } from 'utils';
 
 function subscribe(socket: Socket) {
+  let disconnected = false;
   return eventChannel(emit => {
     socket.off('connect_error');
 
     socket.on('initialization', (rooms: Room[], contacts: Contact[]) => {
       emit(messengerSlice.actions.init({ rooms, contacts }));
+      if (disconnected) {
+        notify.success('Connection is active');
+        disconnected = false;
+      }
     });
 
     socket.on('user:connected', (uuid: string) => {
@@ -51,11 +56,16 @@ function subscribe(socket: Socket) {
       notify.error(message);
     });
 
-    //   socket.on('disconnect', e => {
-    //     // TODO: handle
-    //   });
+    socket.on('disconnect', () => {
+      disconnected = true;
+      notify.warning('Connection was lost');
+      emit(messengerSlice.actions.quit());
+    });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.removeAllListeners();
+      socket.disconnect();
+    };
   });
 }
 
