@@ -2,6 +2,10 @@
   "name": "api",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": "16.x",
+    "yarn": "1.x"
+  },
   "scripts": {
     "dev": "concurrently --raw \"nodemon ./bin/www\" \"yarn --cwd ../ui/ dev\"",
     "start": "node ./bin/www"
