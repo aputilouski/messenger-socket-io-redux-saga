@@ -116,6 +116,7 @@ module.exports = server => {
       User.findAndCountAll({
         attributes: User.userAttributes,
         where: {
+          uuid: { [Op.not]: uuid },
           [Op.or]: {
             username: { [Op.iLike]: { [Op.any]: patterns } },
             name: { [Op.substring]: words },
