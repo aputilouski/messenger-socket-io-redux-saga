@@ -54,7 +54,10 @@ module.exports = server => {
 
         socket.to(contacts.map(user => user.uuid)).emit('user:connected', uuid);
 
-        socket.emit('initialization', contactRooms, contacts);
+        setTimeout(() => {
+          // this delay is needed to avoid a situation where the frontend has not yet registered handlers
+          socket.emit('initialization', contactRooms, contacts);
+        }, 160);
 
         return contactRooms.map(room => room.id);
       })

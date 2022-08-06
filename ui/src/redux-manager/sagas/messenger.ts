@@ -50,6 +50,7 @@ function subscribe(socket: Socket) {
       emit(messengerSlice.actions.pushRoom({ room, contact: contact }));
       emit(messengerSlice.actions.clearSearch());
       if (autoSelect) emit(messengerSlice.actions.selectRoom({ roomID: room.id, loading: false }));
+      emit({ type: MESSAGE_PUSH, payload: { roomID: room.id, message: room.messages[0] } });
     });
 
     socket.on('error', (message: string) => {
